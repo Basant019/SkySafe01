@@ -172,7 +172,11 @@ function isLoggedIn() {
     const loggedInFlag = localStorage.getItem('skysafe_logged_in') === 'true';
     const hasToken = !!localStorage.getItem('skysafe_token');
     const hasUser = !!localStorage.getItem('skysafe_user');
-    return loggedInFlag || (hasToken && hasUser);
+    function isLoggedIn() {
+    const token = localStorage.getItem('skysafe_token');
+    const user = localStorage.getItem('skysafe_user');
+    return !!token && !!user;
+    }
 }
 
 function logout(redirectUrl = 'login.html') {
