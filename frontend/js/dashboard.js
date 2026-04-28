@@ -4,7 +4,7 @@
  *          disaster reports, trip management
  */
 
-const API = 'http://localhost:5000/api';
+const API = 'https://skysafe01.onrender.com/api';
 
 // ═══════════════════════════════════════════════════════
 //  STATE
