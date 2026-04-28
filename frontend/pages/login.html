@@ -246,7 +246,7 @@
   </div><!-- /.page-wrap -->
 
   <script>
-    const API = 'http://localhost:5000/api';
+   const API = 'https://skysafe01.onrender.com/api';
     let currentRole = 'user';
 
     // ── Tab Switch ────────────────────────────────
@@ -368,7 +368,7 @@
         }, 900);
 
       } catch (err) {
-        showMsg('❌ Cannot connect to server. Make sure the backend is running on port 5000.');
+        showMsg('❌ Cannot connect to server. Please try again after a few seconds.');
       } finally {
         setLoading(false);
       }
