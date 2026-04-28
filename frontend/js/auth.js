@@ -169,14 +169,9 @@ function getCurrentUser() {
 }
 
 function isLoggedIn() {
-    const loggedInFlag = localStorage.getItem('skysafe_logged_in') === 'true';
-    const hasToken = !!localStorage.getItem('skysafe_token');
-    const hasUser = !!localStorage.getItem('skysafe_user');
-    function isLoggedIn() {
     const token = localStorage.getItem('skysafe_token');
     const user = localStorage.getItem('skysafe_user');
     return !!token && !!user;
-    }
 }
 
 function logout(redirectUrl = 'login.html') {
@@ -195,7 +190,7 @@ function requireAuth(loginPage = 'login.html') {
     return true;
 }
 
-function redirectIfAuth(dashboardPage = '../pages/forecast.html') {
+function redirectIfAuth(dashboardPage = '../pages/dashboard.html') {
     if (isLoggedIn()) {
         window.location.href = dashboardPage;
         return true;
@@ -338,7 +333,7 @@ function initLoginPage() {
                 if (result.user && result.user.role === 'admin') {
                     window.location.href = '../pages/dashboard.html';
                 } else {
-                    window.location.href = '../pages/forecast.html';
+                    window.location.href = '../pages/dashboard.html';
                 }
             }, 1000);
         } else {
@@ -365,14 +360,14 @@ function initSkySafeAuth() {
     if (hasFname && hasConfirmPassword) {
         console.log('Detected: Registration Page');
         if (isLoggedIn()) {
-            window.location.href = '../pages/forecast.html';
+           window.location.href = '../pages/dashboard.html';
             return;
         }
         initRegistrationPage();
     } else if (hasEmailField && !hasFname) {
         console.log('Detected: Login Page');
         if (isLoggedIn()) {
-            window.location.href = '../pages/forecast.html';
+            window.location.href = '../pages/dashboard.html';
             return;
         }
         initLoginPage();
