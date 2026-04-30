@@ -1,6 +1,5 @@
 // frontend/js/trip.js
-
-const API_BASE = "http://localhost:5000";
+const API_BASE_URL = 'https://skysafe01.onrender.com/api';
 
 let map = null;
 let markersLayer = null;
@@ -164,7 +163,7 @@ async function planTrip() {
   results.classList.remove("visible");
 
   try {
-    const response = await fetch(`${API_BASE}/api/trip/plan`, {
+    const response = await fetch(`${API_BASE_URL}/trip/plan`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),

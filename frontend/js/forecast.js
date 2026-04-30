@@ -1,3 +1,4 @@
+const API_BASE_URL = 'https://skysafe01.onrender.com/api';
 let user = document.querySelector("#uname");
 let username = localStorage.getItem("uname");
 
@@ -54,7 +55,7 @@ loadForecast();
 // ==================== LIVE ALERT NOTIFICATION SYSTEM ====================
 async function checkLiveAlerts() {
     try {
-        const url = 'http://localhost:5000/api/disasters?location=' + (city || '');
+        const url = `${API_BASE_URL}/disasters?location=` + (city || '');
         const res = await fetch(url);
         if (!res.ok) return;
         const result = await res.json();
