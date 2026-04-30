@@ -190,7 +190,7 @@ function requireAuth(loginPage = 'login.html') {
     return true;
 }
 
-function redirectIfAuth(dashboardPage = '../pages/dashboard.html') {
+function redirectIfAuth(dashboardPage = 'dashboard.html') {
     if (isLoggedIn()) {
         window.location.href = dashboardPage;
         return true;
@@ -268,9 +268,9 @@ function initRegistrationPage() {
             saveUserSession(result.user, result.token);
             setTimeout(() => {
                 if (result.user && result.user.role === 'admin') {
-                    window.location.href = '../pages/dashboard.html';
+                    window.location.href = 'dashboard.html';
                 } else {
-                    window.location.href = '../pages/forecast.html';
+                    window.location.href = 'forecast.html';
                 }
             }, 1500);
         } else {
@@ -331,9 +331,9 @@ function initLoginPage() {
             saveUserSession(result.user, result.token);
             setTimeout(() => {
                 if (result.user && result.user.role === 'admin') {
-                    window.location.href = '../pages/dashboard.html';
+                    window.location.href = 'dashboard.html';
                 } else {
-                    window.location.href = '../pages/dashboard.html';
+                    window.location.href = 'dashboard.html';
                 }
             }, 1000);
         } else {
@@ -360,14 +360,14 @@ function initSkySafeAuth() {
     if (hasFname && hasConfirmPassword) {
         console.log('Detected: Registration Page');
         if (isLoggedIn()) {
-           window.location.href = '../pages/dashboard.html';
+           window.location.href = 'dashboard.html';
             return;
         }
         initRegistrationPage();
     } else if (hasEmailField && !hasFname) {
         console.log('Detected: Login Page');
         if (isLoggedIn()) {
-            window.location.href = '../pages/dashboard.html';
+            window.location.href = 'dashboard.html';
             return;
         }
         initLoginPage();

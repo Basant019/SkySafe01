@@ -3,14 +3,14 @@ const axios = require("axios");
 
 // Valid OpenTripMap "kinds" per interest (only tested-working values)
 const interestToKinds = {
-  mountains:  "natural",
-  beaches:    "beaches",
-  spiritual:  "religion",
-  food:       "foods",
-  adventure:  "sport,amusements",
-  nature:     "natural,nature_reserves",
+  mountains: "natural",
+  beaches: "beaches",
+  spiritual: "religion",
+  food: "foods",
+  adventure: "sport,amusements",
+  nature: "natural,nature_reserves",
   historical: "historic,museums",
-  family:     "amusements,tourist_facilities",
+  family: "amusements,tourist_facilities",
 };
 
 // Non-tourist kinds to filter OUT
@@ -117,8 +117,8 @@ async function getPlaceDetails(xid, apiKey) {
     const description = d.wikipedia_extracts?.text
       ? d.wikipedia_extracts.text.slice(0, 280) + "..."
       : d.info?.descr
-      ? d.info.descr.slice(0, 280) + "..."
-      : "A popular local landmark worth visiting.";
+        ? d.info.descr.slice(0, 280) + "..."
+        : "A popular local landmark worth visiting.";
 
     return {
       xid: d.xid,
@@ -130,8 +130,8 @@ async function getPlaceDetails(xid, apiKey) {
       image: d.preview?.source || null,
       address: d.address
         ? [d.address.road, d.address.city, d.address.country]
-            .filter(Boolean)
-            .join(", ")
+          .filter(Boolean)
+          .join(", ")
         : "Address not available",
       rating: d.rate || 1,
     };
