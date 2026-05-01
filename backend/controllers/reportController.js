@@ -65,7 +65,7 @@ const createReport = async (req, res) => {
 
     } catch (error) {
         console.error('Create Report Error:', error);
-        res.status(500).json({ success: false, message: 'Server error while submitting report' });
+        res.status(500).json({ success: false, message: 'Server error while submitting report: ' + error.message });
     }
 };
 

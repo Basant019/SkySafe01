@@ -333,7 +333,7 @@ async function planTrip(req, res) {
     }
 
     return res.status(500).json({
-      error: error.message || "Something went wrong while planning the trip.",
+      error: "Something went wrong: " + error.message,
     });
   }
 }
