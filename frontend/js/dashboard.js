@@ -673,52 +673,49 @@ async function broadcastReport(id) {
     }
 }
 
-// Admin: Manual Alert Creation
-function openCreateAlertModal() {
-    const type = prompt("Enter disaster type (e.g. flood, earthquake, storm):");
-    if (!type) return;
-    const severity = prompt("Enter severity (low, medium, high, critical):");
-    if (!severity) return;
-    const loc = prompt("Enter location (e.g. Mumbai):");
-    if (!loc) return;
-    const desc = prompt("Enter description:");
-    if (!desc) return;
+// Admin: One-Click Push Notification
+async function openCreateAlertModal() {
+    // Reusing the same function name so the HTML button still works without edits
+    const isConfirmed = confirm("🚨 Are you sure you want to trigger a Global Emergency Broadcast to all users?");
+    if (!isConfirmed) return;
 
-    createAdminAlert(type, severity, loc, desc);
-}
+    // Use a cool loading toast
+    toast('Initiating global broadcast...', 'success');
 
-async function createAdminAlert(type, severity, loc, desc) {
     try {
         const payload = {
-            alert_type: type,
-            severity: severity,
-            location: loc,
-            description: desc,
+            alert_type: "SYSTEM EMERGENCY",
+            severity: "critical",
+            location: "GLOBAL",
+            description: "Critical weather or disaster condition detected. Please secure your surroundings and check the map for active safe routes immediately.",
             effective_date: new Date().toISOString(),
             created_by: currentUser.id
         };
+        
+        // Save the alert
         const res = await authFetch(`${API}/disasters/alerts`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         });
+        
         if (res.success) {
-            toast('Disaster alert created successfully!', 'success');
-            // Broadcast it immediately as well
+            // Trigger the Push Notification
             await authFetch(`${API}/notifications`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    user_id: 1, // trigger smart broadcast via condition
+                    user_id: 1, // trigger smart broadcast
                     condition: "disaster",
-                    location: loc
+                    location: "Global System"
                 })
             });
+            toast('📢 Push Notification Broadcasted Successfully!', 'success');
         } else {
-            toast(res.message || 'Failed to create alert', 'error');
+            toast(res.message || 'Failed to create broadcast', 'error');
         }
     } catch {
-        toast('Network error while creating alert', 'error');
+        toast('Network error while broadcasting', 'error');
     }
 }
 
