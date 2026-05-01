@@ -86,7 +86,7 @@ const loginUser = async (req, res) => {
             user: {
                 id: user.id,
                 full_name: user.full_name,
-                email: user.email,
+                email: user.role === 'admin' ? '********@skysafe.com' : user.email,
                 role: user.role,
                 created_at: user.created_at
             },
@@ -111,7 +111,9 @@ const getMyProfile = async (req, res) => {
             return res.status(404).json({ success: false, message: 'User not found.' });
         }
 
-        res.status(200).json({ success: true, user: users[0] });
+        const user = users[0];
+        if (user.role === 'admin') user.email = '********@skysafe.com';
+        res.status(200).json({ success: true, user });
     } catch (error) {
         console.error('Profile Error:', error);
         res.status(500).json({ success: false, message: 'Server error.' });
@@ -131,7 +133,9 @@ const getUserProfile = async (req, res) => {
             return res.status(404).json({ success: false, message: 'User not found.' });
         }
 
-        res.status(200).json({ success: true, user: users[0] });
+        const user = users[0];
+        if (user.role === 'admin') user.email = '********@skysafe.com';
+        res.status(200).json({ success: true, user });
     } catch (error) {
         console.error('Get Profile Error:', error);
         res.status(500).json({ success: false, message: 'Server error.' });

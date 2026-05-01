@@ -198,7 +198,7 @@
           </label>
           <div class="input-wrap">
             <input id="loginEmail" type="email" class="field-input"
-              placeholder="you@example.com" autocomplete="email" required />
+              placeholder="you@example.com" autocomplete="off" required />
           </div>
         </div>
 
@@ -209,7 +209,7 @@
           </label>
           <div class="input-wrap">
             <input id="loginPassword" type="password" class="field-input"
-              placeholder="Enter your password" autocomplete="current-password" required />
+              placeholder="Enter your password" autocomplete="off" required />
             <button type="button" class="eye-btn" id="togglePwd" onclick="togglePassword()">
               <i class="fas fa-eye" id="eyeIcon"></i>
             </button>
@@ -233,12 +233,6 @@
       <div class="form-footer">
         <span>Don't have an account?</span>
         <a href="register.html">Create Account</a>
-      </div>
-
-      <div class="form-footer" style="margin-top:10px;">
-        <span style="font-size:11px; color: rgba(148,163,184,0.5);">
-          Admin credentials: admin@skysafe.com / Admin@123
-        </span>
       </div>
     </div>
 
@@ -374,10 +368,9 @@
       }
     });
 
-    // ── Auto-fill admin credentials ─────────
+    // Tab Admin click - just switch UI, no auto-fill
     document.getElementById('tabAdmin').addEventListener('click', () => {
-      document.getElementById('loginEmail').value = 'admin@skysafe.com';
-      document.getElementById('loginPassword').value = 'Admin@123';
+      clearMsg();
     });
 
     // ── Check if already logged in ────────────────
