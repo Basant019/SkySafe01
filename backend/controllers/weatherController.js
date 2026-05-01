@@ -5,7 +5,10 @@ const https = require('https');
 const getCurrentWeather = async (req, res) => {
     try {
         const { city, lat, lon } = req.query;
-        const apiKey = process.env.WEATHER_API_KEY;
+        const apiKey = process.env.OPENWEATHER_API_KEY || process.env.WEATHER_API_KEY;
+        if (!apiKey) {
+            return res.status(500).json({ success: false, message: 'OpenWeather API Key is not configured on the server.' });
+        }
 
         let apiUrl;
         if (lat && lon) {
@@ -76,7 +79,10 @@ const getCurrentWeather = async (req, res) => {
 const getWeatherForecast = async (req, res) => {
     try {
         const { city, lat, lon } = req.query;
-        const apiKey = process.env.WEATHER_API_KEY;
+        const apiKey = process.env.OPENWEATHER_API_KEY || process.env.WEATHER_API_KEY;
+        if (!apiKey) {
+            return res.status(500).json({ success: false, message: 'OpenWeather API Key is not configured on the server.' });
+        }
 
         let apiUrl;
         if (lat && lon) {
