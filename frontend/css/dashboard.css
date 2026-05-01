@@ -435,8 +435,28 @@ tbody td {
 @media (max-width: 768px) {
   .nav-links { display: none !important; }
   .navbar-hamburger { display: flex; }
-  .nav-right .role-badge { display: none; }
-  .btn-logout span { display: none; }
+  .nav-right .role-badge, 
+  .nav-right .nav-user, 
+  .nav-right .btn-logout { 
+    display: none !important; 
+  }
+  
+  .navbar {
+    padding: 0 16px;
+  }
+
+  .navbar-mobile-menu {
+    top: 64px;
+    height: calc(100vh - 64px);
+    overflow-y: auto;
+    padding-bottom: 40px;
+  }
+
+  .navbar-mobile-menu a {
+    padding: 14px 20px;
+    font-size: 15px;
+    border-bottom: 1px solid var(--border-light);
+  }
 
   .dashboard-header { padding: 18px 16px 14px; }
   .stats-row { padding: 0 16px; margin-top: 16px; grid-template-columns: repeat(2, 1fr); }

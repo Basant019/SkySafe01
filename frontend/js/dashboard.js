@@ -119,10 +119,20 @@ function initNavbar() {
     document.getElementById('navUserName').textContent = name;
     document.getElementById('navAvatar').textContent   = name.charAt(0).toUpperCase();
 
-    const badge = document.getElementById('roleBadge');
+    // Mobile elements
+    const mName = document.getElementById('navUserNameMobile');
+    const mAvatar = document.getElementById('navAvatarMobile');
+    const mBadge = document.getElementById('roleBadgeMobile');
+    if (mName) mName.textContent = name;
+    if (mAvatar) mAvatar.textContent = name.charAt(0).toUpperCase();
+
     if (currentUser.role === 'admin') {
         badge.textContent = '⚡ Admin';
         badge.classList.add('admin');
+        if (mBadge) {
+            mBadge.textContent = '⚡ Admin';
+            mBadge.classList.add('admin');
+        }
         // Show admin nav link
         const adminNav = document.getElementById('adminNavItem');
         if (adminNav) adminNav.style.display = 'list-item';
@@ -132,6 +142,10 @@ function initNavbar() {
     } else {
         badge.textContent = '👤 User';
         badge.classList.add('user');
+        if (mBadge) {
+            mBadge.textContent = '👤 User';
+            mBadge.classList.add('user');
+        }
     }
 }
 
