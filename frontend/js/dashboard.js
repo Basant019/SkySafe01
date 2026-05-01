@@ -22,8 +22,24 @@ function authHeaders() {
     return { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentToken}` };
 }
 async function authFetch(url, options = {}) {
-    const res = await fetch(url, { ...options, headers: { ...authHeaders(), ...(options.headers || {}) } });
-    return res.json();
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+
+    try {
+        const res = await fetch(url, { 
+            ...options, 
+            signal: controller.signal,
+            headers: { ...authHeaders(), ...(options.headers || {}) } 
+        });
+        clearTimeout(timeoutId);
+        return await res.json();
+    } catch (error) {
+        clearTimeout(timeoutId);
+        if (error.name === 'AbortError') {
+            throw new Error('Request timed out after 10 seconds');
+        }
+        throw error;
+    }
 }
 
 // ═══════════════════════════════════════════════════════
@@ -127,9 +143,13 @@ function initNavbar() {
     if (mName) mName.textContent = name;
     if (mAvatar) mAvatar.textContent = name.charAt(0).toUpperCase();
 
+    const badge = document.getElementById('roleBadge');
+
     if (currentUser.role === 'admin') {
-        badge.textContent = '⚡ Admin';
-        badge.classList.add('admin');
+        if (badge) {
+            badge.textContent = '⚡ Admin';
+            badge.classList.add('admin');
+        }
         if (mBadge) {
             mBadge.textContent = '⚡ Admin';
             mBadge.classList.add('admin');
@@ -141,8 +161,10 @@ function initNavbar() {
         const mobileAdminLink = document.getElementById('mobileAdminLink');
         if (mobileAdminLink) mobileAdminLink.style.display = 'flex';
     } else {
-        badge.textContent = '👤 User';
-        badge.classList.add('user');
+        if (badge) {
+            badge.textContent = '👤 User';
+            badge.classList.add('user');
+        }
         if (mBadge) {
             mBadge.textContent = '👤 User';
             mBadge.classList.add('user');

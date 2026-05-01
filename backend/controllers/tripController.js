@@ -1,4 +1,5 @@
 // backend/controllers/tripController.js
+const { pool } = require("../config/db");
 const { geocodeCity } = require("../services/geoService");
 const { getWeather } = require("../services/weatherService");
 const { getNearbyPlaces, getAmenities } = require("../services/placeService");
@@ -338,4 +339,103 @@ async function planTrip(req, res) {
   }
 }
 
-module.exports = { planTrip };
+/**
+ * Save a generated trip plan to the database.
+ */
+async function saveTrip(req, res) {
+  try {
+    const {
+      user_id, trip_name, source_location, destination_location,
+      start_date, end_date, travel_mode, budget_level, interests, notes
+    } = req.body;
+
+    const [result] = await pool.query(
+      `INSERT INTO trip_plans (user_id, trip_name, source_location, destination_location, start_date, end_date, travel_mode, budget_level, interests, notes)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [user_id, trip_name, source_location, destination_location, start_date, end_date, travel_mode, budget_level, interests, notes]
+    );
+
+    res.status(201).json({ success: true, message: "Trip saved successfully!", trip_id: result.insertId });
+  } catch (error) {
+    console.error("Save Trip Error:", error.message);
+    res.status(500).json({ success: false, message: "Could not save trip: " + error.message });
+  }
+}
+
+/**
+ * Get all trips for a specific user.
+ */
+async function getUserTrips(req, res) {
+  try {
+    const { userId } = req.params;
+    const [trips] = await pool.query(
+      "SELECT * FROM trip_plans WHERE user_id = ? ORDER BY created_at DESC",
+      [userId]
+    );
+    res.json({ success: true, trips });
+  } catch (error) {
+    console.error("Get User Trips Error:", error.message);
+    res.status(500).json({ success: false, message: "Could not fetch trips: " + error.message });
+  }
+}
+
+/**
+ * Admin: Get all trips across all users.
+ */
+async function getAllTrips(req, res) {
+  try {
+    const [trips] = await pool.query(
+      `SELECT t.*, u.full_name as user_name 
+       FROM trip_plans t 
+       JOIN users u ON t.user_id = u.id 
+       ORDER BY t.created_at DESC`
+    );
+    res.json({ success: true, trips });
+  } catch (error) {
+    console.error("Get All Trips Error:", error.message);
+    res.status(500).json({ success: false, message: "Could not fetch all trips: " + error.message });
+  }
+}
+
+/**
+ * Add a log/update to a trip.
+ */
+async function addTripUpdate(req, res) {
+  try {
+    const { trip_id, user_id, update_type, title, content } = req.body;
+    await pool.query(
+      "INSERT INTO trip_updates (trip_id, user_id, update_type, title, content) VALUES (?, ?, ?, ?, ?)",
+      [trip_id, user_id, update_type || 'note', title, content]
+    );
+    res.json({ success: true, message: "Update added successfully!" });
+  } catch (error) {
+    console.error("Add Trip Update Error:", error.message);
+    res.status(500).json({ success: false, message: "Could not add update: " + error.message });
+  }
+}
+
+/**
+ * Get all updates/logs for a trip.
+ */
+async function getTripUpdates(req, res) {
+  try {
+    const { tripId } = req.params;
+    const [updates] = await pool.query(
+      "SELECT * FROM trip_updates WHERE trip_id = ? ORDER BY created_at DESC",
+      [tripId]
+    );
+    res.json({ success: true, updates });
+  } catch (error) {
+    console.error("Get Trip Updates Error:", error.message);
+    res.status(500).json({ success: false, message: "Could not fetch updates: " + error.message });
+  }
+}
+
+module.exports = { 
+  planTrip, 
+  saveTrip, 
+  getUserTrips, 
+  getAllTrips, 
+  addTripUpdate, 
+  getTripUpdates 
+};
