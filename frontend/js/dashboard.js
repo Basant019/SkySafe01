@@ -295,6 +295,18 @@ function renderAdminStats() {
 
 function renderAdminContent() {
     document.getElementById('contentArea').innerHTML = `
+        <!-- Quick Actions -->
+        <div style="margin-bottom: 25px;">
+            <div class="section-header">
+                <h2 class="section-title"><i class="fas fa-bolt"></i> Quick Actions</h2>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                <button class="btn btn-danger" onclick="openCreateAlertModal()" style="padding: 15px; font-size: 16px; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);">
+                    <i class="fas fa-bullhorn"></i> Broadcast Global Alert
+                </button>
+            </div>
+        </div>
+
         <!-- All Reports Table -->
         <div>
             <div class="section-header">
