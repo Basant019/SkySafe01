@@ -45,15 +45,36 @@ const getSafeRoute = async (req, res) => {
         ];
 
         // 3. Fetch Routes from Open Source Routing Machine (OSRM)
-        // Request alternatives to find at least one safe route
-        const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${srcGeo.lon},${srcGeo.lat};${destGeo.lon},${destGeo.lat}?alternatives=true&geometries=geojson&overview=full`;
-        const response = await axios.get(osrmUrl);
+        // We use a primary and a fallback public server because demo servers are unreliable
+        const osrmServers = [
+            'https://router.project-osrm.org',
+            'https://routing.openstreetmap.de/routed-car'
+        ];
 
-        if (!response.data || !response.data.routes || response.data.routes.length === 0) {
-            return res.status(404).json({ success: false, message: 'Could not find a route between these locations.' });
+        let routes = [];
+        let routeError = null;
+
+        for (const server of osrmServers) {
+            try {
+                const osrmUrl = `${server}/route/v1/driving/${srcGeo.lon},${srcGeo.lat};${destGeo.lon},${destGeo.lat}?alternatives=true&geometries=geojson&overview=full`;
+                const response = await axios.get(osrmUrl, { timeout: 8000 }); // 8s timeout
+
+                if (response.data && response.data.routes && response.data.routes.length > 0) {
+                    routes = response.data.routes;
+                    break; // Success!
+                }
+            } catch (err) {
+                console.warn(`OSRM Server ${server} failed:`, err.message);
+                routeError = err.message;
+            }
         }
 
-        const routes = response.data.routes;
+        if (routes.length === 0) {
+            return res.status(502).json({ 
+                success: false, 
+                message: 'Routing services are currently unavailable. ' + (routeError || '') 
+            });
+        }
         let safeRoute = null;
         let warning = null;
         const DANGER_RADIUS_KM = 30; // 30 km safety buffer
