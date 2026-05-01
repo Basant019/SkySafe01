@@ -180,10 +180,10 @@
 
       <!-- Tab Switcher -->
       <div class="tab-switcher">
-        <button type="button" class="tab-btn active" id="tabUser">
+        <button class="tab-btn active" id="tabUser" onclick="switchTab('user')">
           <i class="fas fa-user"></i> User Login
         </button>
-        <button type="button" class="tab-btn" id="tabAdmin">
+        <button class="tab-btn" id="tabAdmin" onclick="switchTab('admin')">
           <i class="fas fa-shield-halved"></i> Admin Login
         </button>
       </div>
@@ -256,31 +256,22 @@
       const tabAdmin = document.getElementById('tabAdmin');
       const btn      = document.getElementById('loginBtn');
       const btnText  = document.getElementById('loginBtnText');
-      const emailInput = document.getElementById('loginEmail');
-      const pwdInput = document.getElementById('loginPassword');
 
       if (role === 'admin') {
         tabUser.classList.remove('active');
         tabAdmin.classList.add('active');
         btn.classList.add('admin-mode');
         btnText.innerHTML = '<i class="fas fa-shield-halved"></i> Admin Sign In';
-        emailInput.placeholder = 'admin@skysafe.com';
-        emailInput.value = 'admin@skysafe.com';
-        pwdInput.value = 'Admin@123';
+        document.getElementById('loginEmail').placeholder = 'admin@skysafe.com';
       } else {
         tabAdmin.classList.remove('active');
         tabUser.classList.add('active');
         btn.classList.remove('admin-mode');
         btnText.innerHTML = '<i class="fas fa-arrow-right-to-bracket"></i> Sign In';
-        emailInput.placeholder = 'you@example.com';
-        emailInput.value = '';
-        pwdInput.value = '';
+        document.getElementById('loginEmail').placeholder = 'you@example.com';
       }
       clearMsg();
     }
-
-    document.getElementById('tabUser').addEventListener('click', () => switchTab('user'));
-    document.getElementById('tabAdmin').addEventListener('click', () => switchTab('admin'));
 
     // ── Toggle Password Visibility ────────────────
     function togglePassword() {
@@ -369,7 +360,11 @@
 
         // Redirect based on role
         setTimeout(() => {
-          window.location.href = 'dashboard.html';
+          if (data.user.role === 'admin') {
+            window.location.href = 'dashboard.html';
+          } else {
+            window.location.href = 'dashboard.html';
+          }
         }, 900);
 
       } catch (err) {
@@ -377,6 +372,12 @@
       } finally {
         setLoading(false);
       }
+    });
+
+    // ── Auto-fill admin credentials ─────────
+    document.getElementById('tabAdmin').addEventListener('click', () => {
+      document.getElementById('loginEmail').value = 'admin@skysafe.com';
+      document.getElementById('loginPassword').value = 'Admin@123';
     });
 
     // ── Check if already logged in ────────────────
@@ -389,11 +390,9 @@
           window.location.href = 'dashboard.html';
         }
       } catch (err) {
-        // If JSON.parse fails due to corrupted localStorage, clear it
         localStorage.removeItem('skysafe_token');
         localStorage.removeItem('skysafe_user');
         localStorage.removeItem('skysafe_role');
-        console.warn('Cleared corrupted localStorage');
       }
     })();
   </script>
