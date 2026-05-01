@@ -312,6 +312,28 @@ async function fetchUSGSIndiaEarthquakes() {
 function updateStatsFromNASA() {
   const el = document.getElementById('statActive');
   if (el) el.textContent = DISASTERS.length;
+  fetchCommunityStats();
+}
+
+async function fetchCommunityStats() {
+  try {
+    const API_BASE = 'https://skysafe01.onrender.com/api';
+    const [repRes, alrRes] = await Promise.all([
+      fetch(`${API_BASE}/reports`),
+      fetch(`${API_BASE}/disasters?active=true`)
+    ]);
+
+    const repData = await repRes.json();
+    const alrData = await alrRes.json();
+
+    const rEl = document.getElementById('statReports');
+    const aEl = document.getElementById('statAlerts');
+
+    if (rEl) rEl.textContent = repData.count || 0;
+    if (aEl) aEl.textContent = alrData.count || 0;
+  } catch (err) {
+    console.warn('Could not fetch community stats:', err);
+  }
 }
 
 function refreshDisasters() {
@@ -576,6 +598,9 @@ async function renderWeatherImpact(lat, lon) {
     const vis    = (w.visibility || 10000) / 1000;
     const rain   = w.rain?.['1h'] || 0;
     const wMain  = w.weather?.[0]?.main || '';
+    
+    // NEW FEATURE: Safety Intelligence Calculation
+    updateSafetyIntelligence(temp, wind, humid, rain, wMain);
 
     const impacts = [];
 
@@ -1508,5 +1533,52 @@ async function broadcastGlobalAlert(title, message, location) {
          icon: 'https://cdn-icons-png.flaticon.com/512/1041/1041885.png' 
        });
     }
+  }
+}
+
+// ── NEW FEATURE: SAFETY INTELLIGENCE ──
+function updateSafetyIntelligence(temp, wind, humid, rain, condition) {
+  const container = document.getElementById('safetyAdviceContainer');
+  const scoreEl   = document.getElementById('localSafetyScore');
+  const evacEl    = document.getElementById('evacStatus');
+  if (!container || !scoreEl) return;
+
+  // Simple Safety Score Logic (100 is best)
+  let score = 100;
+  let advice = [];
+
+  if (wind > 50) { score -= 30; advice.push("💨 <strong>High Winds:</strong> Secure loose outdoor items and avoid travel."); }
+  if (rain > 10) { score -= 25; advice.push("🌧️ <strong>Heavy Rain:</strong> Flash flood risk elevated. Avoid low-lying areas."); }
+  if (temp > 40) { score -= 20; advice.push("🌡️ <strong>Extreme Heat:</strong> Stay hydrated. Limit outdoor activity between 11 AM - 4 PM."); }
+  if (condition.toLowerCase().includes('storm')) { score -= 40; advice.push("⛈️ <strong>Storm Warning:</strong> Move to a secure indoor location immediately."); }
+  if (DISASTERS.length > 0) { score -= 15; advice.push(`🚨 <strong>Nearby Alerts:</strong> ${DISASTERS.length} active event(s) detected in the region.`); }
+
+  // Final score clamp
+  score = Math.max(5, score);
+  
+  scoreEl.textContent = score;
+  scoreEl.style.color = score > 70 ? '#10b981' : score > 40 ? '#f59e0b' : '#ef4444';
+  
+  if (score < 40) {
+    evacEl.textContent = 'HIGH ALERT';
+    evacEl.style.color = '#ef4444';
+  } else if (score < 70) {
+    evacEl.textContent = 'STAY ALERT';
+    evacEl.style.color = '#f59e0b';
+  } else {
+    evacEl.textContent = 'CLEAR';
+    evacEl.style.color = '#10b981';
+  }
+
+  if (advice.length === 0) {
+    container.innerHTML = `
+      <div class="alert alert-success" style="background:rgba(16,185,129,0.05);border:1px solid rgba(16,185,129,0.2);color:#10b981;font-size:14px;">
+        <i class="fas fa-check-circle me-2"></i> Conditions are currently stable in this area. No immediate action required.
+      </div>`;
+  } else {
+    container.innerHTML = advice.map(a => `
+      <div class="alert alert-warning" style="background:rgba(245,158,11,0.05);border:1px solid rgba(245,158,11,0.2);color:#d97706;font-size:13px;margin-bottom:8px;">
+        ${a}
+      </div>`).join('');
   }
 }

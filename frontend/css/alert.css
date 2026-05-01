@@ -13,6 +13,26 @@
   --yellow: #ffcc00;
 }
 
+/* Safety Intelligence Section */
+.safety-metric-box {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 12px;
+  text-align: center;
+}
+.smb-label {
+  font-size: 10px;
+  color: #64748b;
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+}
+.smb-val {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+}
+
 *,
 *::before,
 *::after {

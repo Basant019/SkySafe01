@@ -636,11 +636,43 @@ body {
   }
 
   .layer-panel {
+    top: auto !important;
+    bottom: 20px !important;
+    right: 10px !important;
+    left: 10px !important;
+    width: auto !important;
+    height: 60px !important;
+    flex-direction: row !important;
+    padding: 0 10px !important;
+    border-left: none !important;
+    border-top: 1px solid var(--sky-border) !important;
+    border-radius: 12px !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    justify-content: flex-start !important;
+    gap: 12px !important;
+  }
+
+  .layer-btn {
+    flex-shrink: 0 !important;
+    width: 44px !important;
+    height: 44px !important;
+  }
+
+  .layer-label {
     display: none !important;
   }
 
   .timeline-bar {
-    right: 0 !important;
+    bottom: 90px !important;
+    right: 10px !important;
+    left: 10px !important;
+    width: auto !important;
+  }
+
+  .bottom-toggles {
+    bottom: 150px !important;
+    right: 10px !important;
   }
 }
 

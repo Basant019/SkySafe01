@@ -128,6 +128,9 @@
     .thumb-thunder { background:linear-gradient(135deg,#3a2a0a,#885522,#ffaa00); }
     .thumb-pressure { background:linear-gradient(135deg,#2a0a2a,#662266,#ff44ff); }
     .thumb-hurricane { background:linear-gradient(135deg,#3a0a0a,#882222,#ff4444); }
+    .thumb-heat { background:linear-gradient(135deg,#ff4b2b,#ff416c); }
+    .thumb-cold { background:linear-gradient(135deg,#4b79a1,#283e51); }
+
 
     /* BOTTOM TIMELINE (like Windy) */
     .timeline-bar {
@@ -384,6 +387,22 @@
     }
     .toggle-pill.active { border-color:var(--sky-blue); color:var(--sky-blue); }
     .toggle-pill i { font-size:0.7rem; }
+    
+    /* Disaster Markers */
+    .disaster-marker { display:flex; align-items:center; justify-content:center; }
+    .d-icon { font-size:1.2rem; z-index:2; filter:drop-shadow(0 0 5px rgba(0,0,0,0.5)); }
+    .d-pulse {
+      position:absolute; width:30px; height:30px; border-radius:50%;
+      animation: d-pulse 2s infinite; z-index:1;
+    }
+    .d-pulse.extreme { background:rgba(255,34,68,0.4); box-shadow:0 0 15px #ff2244; }
+    .d-pulse.severe  { background:rgba(255,136,0,0.4); box-shadow:0 0 15px #ff8800; }
+    .d-pulse.moderate{ background:rgba(255,204,0,0.4); box-shadow:0 0 15px #ffcc00; }
+    
+    @keyframes d-pulse {
+      0% { transform:scale(0.5); opacity:1; }
+      100% { transform:scale(2); opacity:0; }
+    }
   </style>
 </head>
 <body>
@@ -460,6 +479,14 @@
   <button class="layer-btn" data-layer="thunder" onclick="switchLayer('thunder',this)">
     <div class="layer-thumb thumb-thunder">⚡</div>
     <div class="layer-label">Thunder</div>
+  </button>
+  <button class="layer-btn" data-layer="heat" onclick="switchLayer('heat',this)">
+    <div class="layer-thumb thumb-heat">🔥</div>
+    <div class="layer-label">Heat</div>
+  </button>
+  <button class="layer-btn" data-layer="cold" onclick="switchLayer('cold',this)">
+    <div class="layer-thumb thumb-cold">❄️</div>
+    <div class="layer-label">Cold</div>
   </button>
   <div class="layer-sep"></div>
   <button class="layer-btn" data-layer="pressure" onclick="switchLayer('pressure',this)">
@@ -593,14 +620,15 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 // ===================== CONFIG =====================
-const API_KEY = '85e24fbc730d141f1608cd28e13d5c71'; // ← Replace with your key
+const API_KEY = '8e7933e7c3fc00fd5fab0849a95f2ed8'; 
 const OWM_BASE = 'https://api.openweathermap.org/data/2.5';
 const OWM_TILE = 'https://tile.openweathermap.org/map';
+const EONET_API = 'https://eonet.gsfc.nasa.gov/api/v3/events';
 
 // ===================== MAP INIT =====================
 const map = L.map('map', {
-  center: [20, 77],
-  zoom: 4,
+  center: [20.5937, 78.9629], // Center of India
+  zoom: 5,
   zoomControl: false,
   attributionControl: false
 });
@@ -609,6 +637,8 @@ const map = L.map('map', {
 L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
   maxZoom: 19
 }).addTo(map);
+
+const disasterLayer = L.layerGroup().addTo(map);
 
 // OWM weather tile layer
 let currentOWMLayer = null;
@@ -622,12 +652,15 @@ const layerNames = {
   sat: 'clouds_new',
   thunder: 'precipitation_new',
   pressure: 'pressure_new',
-  hurricane: 'wind_new'
+  hurricane: 'wind_new',
+  cold: 'precipitation_new',
+  heat: 'temp_new'
 };
 const layerLabels = {
   wind:'WIND', rain:'RAIN & THUNDER', temp:'TEMPERATURE',
   cloud:'CLOUDS', wave:'WAVES', radar:'RADAR',
-  sat:'SATELLITE', thunder:'THUNDERSTORMS', pressure:'PRESSURE', hurricane:'HURRICANE TRACKER'
+  sat:'SATELLITE', thunder:'THUNDERSTORMS', pressure:'PRESSURE', 
+  hurricane:'HURRICANE TRACKER', cold:'SNOW & COLD', heat:'EXTREME HEAT'
 };
 const scaleConfigs = {
   wind: { bar:'linear-gradient(to right,#001a4a,#0055ff,#00c8ff,#00ff88,#ffff00,#ff6b00)', min:'0 m/s', mid:'25 m/s', max:'50+ m/s' },
@@ -659,6 +692,48 @@ function addOWMLayer(type) {
 }
 
 addOWMLayer('wind');
+
+// ===================== DISASTERS (Unified) =====================
+async function loadDisasters() {
+  try {
+    const res = await fetch(`${EONET_API}?status=open&limit=100`);
+    const data = await res.json();
+    disasterLayer.clearLayers();
+    
+    data.events.forEach(ev => {
+      const cat = ev.categories[0].title;
+      const geom = ev.geometry[0];
+      if (geom.type !== 'Point') return;
+      
+      const coords = [geom.coordinates[1], geom.coordinates[0]];
+      const sev = determineSeverity(ev.title);
+      
+      const marker = L.divIcon({
+        className: 'disaster-marker',
+        html: `<div class="d-pulse ${sev}"></div><div class="d-icon">${getIcon(cat)}</div>`,
+        iconSize: [30, 30]
+      });
+
+      L.marker(coords, { icon: marker })
+        .bindPopup(`<strong>${ev.title}</strong><br/>Category: ${cat}<br/>Severity: ${sev.toUpperCase()}`)
+        .addTo(disasterLayer);
+    });
+  } catch(e) { console.error("EONET Load Fail", e); }
+}
+
+function determineSeverity(title) {
+  t = title.toLowerCase();
+  if (t.includes('major') || t.includes('severe') || t.includes('extreme')) return 'extreme';
+  if (t.includes('strong') || t.includes('heavy')) return 'severe';
+  return 'moderate';
+}
+
+function getIcon(cat) {
+  const icons = { 'Wildfires': '🔥', 'Severe Storms': '⛈', 'Floods': '🌊', 'Volcanoes': '🌋', 'Earthquakes': '🌋' };
+  return icons[cat] || '⚠️';
+}
+
+loadDisasters();
 
 // ===================== LAYER SWITCH =====================
 function switchLayer(type, btn) {

@@ -64,11 +64,24 @@ function initMap() {
   }).addTo(map);
 
   // Use CartoDB Dark (free tier, no API key needed)
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+  const baseLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
     subdomains: 'abcd',
     maxZoom: 19
   }).addTo(map);
+
+  // ── WEATHER LAYERS (OpenWeatherMap) ──
+  const OWM_KEY = '8e7933e7c3fc00fd5fab0849a95f2ed8';
+  const weatherLayers = {
+    "🌡️ Heat Map": L.tileLayer(`https://tile.openweathermap.org/map/temp_new/{z}/{x}/{y}.png?appid=${OWM_KEY}`, { opacity: 0.4 }),
+    "💨 Wind Speed": L.tileLayer(`https://tile.openweathermap.org/map/wind_new/{z}/{x}/{y}.png?appid=${OWM_KEY}`, { opacity: 0.4 }),
+    "🌧️ Precipitation": L.tileLayer(`https://tile.openweathermap.org/map/precipitation_new/{z}/{x}/{y}.png?appid=${OWM_KEY}`, { opacity: 0.5 }),
+    "☁️ Cloud Cover": L.tileLayer(`https://tile.openweathermap.org/map/clouds_new/{z}/{x}/{y}.png?appid=${OWM_KEY}`, { opacity: 0.4 }),
+    "🌀 Pressure": L.tileLayer(`https://tile.openweathermap.org/map/pressure_new/{z}/{x}/{y}.png?appid=${OWM_KEY}`, { opacity: 0.3 })
+  };
+
+  // Add Layer Control
+  L.control.layers(null, weatherLayers, { position: 'topright', collapsed: false }).addTo(map);
 
   disasterLayer = L.layerGroup().addTo(map);
   
