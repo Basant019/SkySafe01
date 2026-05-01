@@ -23,11 +23,15 @@ const createAlert = async (req, res) => {
             });
         }
 
+        // Format dates for MySQL
+        const formattedEffective = effective_date ? new Date(effective_date).toISOString().slice(0, 19).replace('T', ' ') : null;
+        const formattedExpires = expires_at ? new Date(expires_at).toISOString().slice(0, 19).replace('T', ' ') : null;
+
         const [result] = await pool.query(
             `INSERT INTO disaster_alerts 
             (alert_type, severity, location, description, latitude, longitude, effective_date, expires_at, created_by) 
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [alert_type, severity, location, description, latitude || null, longitude || null, effective_date, expires_at || null, created_by || null]
+            [alert_type, severity, location, description, latitude || null, longitude || null, formattedEffective, formattedExpires, created_by || null]
         );
 
         res.status(201).json({
@@ -40,7 +44,7 @@ const createAlert = async (req, res) => {
         console.error('Create Alert Error:', error);
         res.status(500).json({
             success: false,
-            message: 'Server error'
+            message: 'Server error: ' + error.message
         });
     }
 };
@@ -76,7 +80,7 @@ const getActiveAlerts = async (req, res) => {
         console.error('Get Alerts Error:', error);
         res.status(500).json({
             success: false,
-            message: 'Server error'
+            message: 'Server error: ' + error.message
         });
     }
 };
@@ -106,7 +110,7 @@ const getAlertsByLocation = async (req, res) => {
         console.error('Get Location Alerts Error:', error);
         res.status(500).json({
             success: false,
-            message: 'Server error'
+            message: 'Server error: ' + error.message
         });
     }
 };
@@ -131,7 +135,7 @@ const updateAlertStatus = async (req, res) => {
         console.error('Update Alert Error:', error);
         res.status(500).json({
             success: false,
-            message: 'Server error'
+            message: 'Server error: ' + error.message
         });
     }
 };
@@ -162,7 +166,7 @@ const subscribeToAlerts = async (req, res) => {
         console.error('Subscribe Error:', error);
         res.status(500).json({
             success: false,
-            message: 'Server error'
+            message: 'Server error: ' + error.message
         });
     }
 };
@@ -186,7 +190,7 @@ const getUserSubscriptions = async (req, res) => {
         console.error('Get Subscriptions Error:', error);
         res.status(500).json({
             success: false,
-            message: 'Server error'
+            message: 'Server error: ' + error.message
         });
     }
 };
