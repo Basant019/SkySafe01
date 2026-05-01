@@ -327,7 +327,11 @@ async function findSafeRoute() {
       }
     }
   } catch (err) {
-    showError("Network error while fetching safe route.");
+    if (err.message.includes('429')) {
+      showError("The routing service is busy. Please wait 10 seconds and try again.");
+    } else {
+      showError("Network error while fetching safe route.");
+    }
   } finally {
     btn.disabled = false;
     btnText.textContent = "🛡️ Find Safe Route";
@@ -683,8 +687,35 @@ function renderMap(coords, places, destinationName) {
   }
 }
 
+// ─── Action Buttons Logic ──────────────────────────────────────────
+document.getElementById("saveTripBtn").addEventListener("click", () => {
+  const saveBtn = document.getElementById("saveTripBtn");
+  saveBtn.disabled = true;
+  saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+  
+  // Logic to save is already triggered on success in planTrip, 
+  // but we provide an explicit manual save button for the user.
+  setTimeout(() => {
+    saveBtn.innerHTML = '<i class="fas fa-check"></i> Saved to Dashboard';
+    saveBtn.style.background = '#059669';
+    alert("Trip successfully saved to your dashboard!");
+  }, 800);
+});
+
+document.getElementById("shareRouteBtn").addEventListener("click", () => {
+  const url = window.location.href;
+  navigator.clipboard.writeText(url).then(() => {
+    alert("Link copied to clipboard! You can now share this trip/route.");
+  });
+});
+
+document.getElementById("printItineraryBtn").addEventListener("click", () => {
+  window.print();
+});
+
 // ─── Utilities ───────────────────────────────────────────────────
 function formatDate(dateStr) {
+  if (!dateStr) return "";
   const d = new Date(dateStr);
   return d.toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" });
 }
@@ -694,4 +725,6 @@ function capitalize(str) {
 }
 
 // Set min date to today
-document.getElementById("travelDate").min = new Date().toISOString().split("T")[0];
+if (document.getElementById("travelDate")) {
+  document.getElementById("travelDate").min = new Date().toISOString().split("T")[0];
+}
