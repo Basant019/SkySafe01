@@ -688,8 +688,7 @@ async function openCreateAlertModal() {
             severity: "critical",
             location: "GLOBAL",
             description: "Critical weather or disaster condition detected. Please secure your surroundings and check the map for active safe routes immediately.",
-            effective_date: new Date().toISOString(),
-            created_by: currentUser.id
+            effective_date: new Date().toISOString()
         };
         
         // Save the alert

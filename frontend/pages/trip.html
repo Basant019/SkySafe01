@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -8,11 +9,12 @@
   <!-- Leaflet CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <!-- FontAwesome -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
   <!-- Custom CSS -->
   <link rel="stylesheet" href="../css/trip.css" />
   <link rel="stylesheet" href="../css/responsive.css" />
 </head>
+
 <body>
   <nav class="ss-nav">
     <a href="dashboard.html" class="ss-nav-brand">
@@ -25,14 +27,16 @@
       <li><a href="Map.html"><i class="fas fa-map"></i> <span>Map</span></a></li>
       <li><a href="forecast.html"><i class="fas fa-cloud-sun"></i> <span>Forecast</span></a></li>
       <li><a href="alert.html"><i class="fas fa-triangle-exclamation"></i> <span>Alerts</span></a></li>
-      <li><a href="trip.html" class="ss-active"><i class="fas fa-map-location-dot"></i> <span>Trip Planner</span></a></li>
+      <li><a href="trip.html" class="ss-active"><i class="fas fa-map-location-dot"></i> <span>Trip Planner</span></a>
+      </li>
     </ul>
 
     <div class="ss-nav-right">
       <button class="theme-toggle" id="themeToggle" title="Toggle Theme">
         <i class="fas fa-sun"></i>
       </button>
-      <button class="btn-logout" onclick="localStorage.clear();window.location.href='login.html'" style="background:transparent;border:1px solid rgba(255,255,255,0.2);color:#fff;border-radius:8px;padding:6px 12px;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:'Inter',sans-serif;font-size:13px;">
+      <button class="btn-logout" onclick="localStorage.clear();window.location.href='login.html'"
+        style="background:transparent;border:1px solid rgba(255,255,255,0.2);color:#fff;border-radius:8px;padding:6px 12px;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:'Inter',sans-serif;font-size:13px;">
         <i class="fas fa-sign-out-alt"></i> <span class="d-mobile-none">Logout</span>
       </button>
       <button class="ss-hamburger" id="mobileMenuBtn">
@@ -53,7 +57,8 @@
   <!-- ─── Hero ─── -->
   <section class="hero">
     <h1>Plan Smarter. Travel Safer.</h1>
-    <p>Get a real weather-aware, AI-generated itinerary for your next trip — with live weather data and actual tourist places.</p>
+    <p>Get a real weather-aware, AI-generated itinerary for your next trip — with live weather data and actual tourist
+      places.</p>
   </section>
 
   <!-- ─── Main ─── -->
@@ -67,10 +72,12 @@
 
         <!-- TAB SWITCHER -->
         <div style="display:flex; gap: 10px; margin-bottom: 24px; margin-top: 10px;">
-          <button type="button" id="tabTripBtn" class="btn-submit" style="flex:1; background: var(--primary); color:#fff; font-size:14px; padding:12px; transition: 0.3s;">
+          <button type="button" id="tabTripBtn" class="btn-submit"
+            style="flex:1; background: var(--primary); color:#fff; font-size:14px; padding:12px; transition: 0.3s;">
             ✈️ Trip Planner
           </button>
-          <button type="button" id="tabRouteBtn" class="btn-submit" style="flex:1; background: var(--surface-primary); color:var(--text-secondary); font-size:14px; padding:12px; border: 1px solid var(--border); box-shadow: none; transition: 0.3s;">
+          <button type="button" id="tabRouteBtn" class="btn-submit"
+            style="flex:1; background: var(--surface-primary); color:var(--text-secondary); font-size:14px; padding:12px; border: 1px solid var(--border); box-shadow: none; transition: 0.3s;">
             🛡️ Safe Route
           </button>
         </div>
@@ -90,60 +97,60 @@
 
             <!-- START TRIP ONLY FIELDS -->
             <div id="tripOnlyFields" style="display: contents;">
-            <div class="form-group">
-              <label for="travelDate">Travel Date *</label>
-              <input type="date" id="travelDate" />
-            </div>
-
-            <div class="form-group">
-              <label for="numDays">Number of Days</label>
-              <input type="number" id="numDays" value="3" min="1" max="15" />
-            </div>
-
-            <div class="form-group">
-              <label for="numPeople">Number of People</label>
-              <input type="number" id="numPeople" value="2" min="1" max="50" />
-            </div>
-
-            <div class="form-group">
-              <label for="budget">Budget Level</label>
-              <select id="budget">
-                <option value="low">🪙 Low (Budget)</option>
-                <option value="medium" selected>💳 Medium (Standard)</option>
-                <option value="high">💎 High (Luxury)</option>
-              </select>
-            </div>
-
-            <!-- Interests -->
-            <div class="form-group full">
-              <label>Interests (select all that apply)</label>
-              <div class="interests-grid">
-                <label class="interest-chip">
-                  <input type="checkbox" value="mountains" /> ⛰ Mountains
-                </label>
-                <label class="interest-chip">
-                  <input type="checkbox" value="beaches" /> 🏖 Beaches
-                </label>
-                <label class="interest-chip">
-                  <input type="checkbox" value="spiritual" /> 🕌 Spiritual
-                </label>
-                <label class="interest-chip">
-                  <input type="checkbox" value="food" /> 🍜 Food
-                </label>
-                <label class="interest-chip">
-                  <input type="checkbox" value="adventure" /> 🧗 Adventure
-                </label>
-                <label class="interest-chip">
-                  <input type="checkbox" value="nature" /> 🌿 Nature
-                </label>
-                <label class="interest-chip">
-                  <input type="checkbox" value="historical" checked /> 🏛 Historical
-                </label>
-                <label class="interest-chip checked">
-                  <input type="checkbox" value="family" /> 👨‍👩‍👧 Family
-                </label>
+              <div class="form-group">
+                <label for="travelDate">Travel Date *</label>
+                <input type="date" id="travelDate" />
               </div>
-            </div>
+
+              <div class="form-group">
+                <label for="numDays">Number of Days</label>
+                <input type="number" id="numDays" value="3" min="1" max="15" />
+              </div>
+
+              <div class="form-group">
+                <label for="numPeople">Number of People</label>
+                <input type="number" id="numPeople" value="2" min="1" max="50" />
+              </div>
+
+              <div class="form-group">
+                <label for="budget">Budget Level</label>
+                <select id="budget">
+                  <option value="low">🪙 Low (Budget)</option>
+                  <option value="medium" selected>💳 Medium (Standard)</option>
+                  <option value="high">💎 High (Luxury)</option>
+                </select>
+              </div>
+
+              <!-- Interests -->
+              <div class="form-group full">
+                <label>Interests (select all that apply)</label>
+                <div class="interests-grid">
+                  <label class="interest-chip">
+                    <input type="checkbox" value="mountains" /> ⛰ Mountains
+                  </label>
+                  <label class="interest-chip">
+                    <input type="checkbox" value="beaches" /> 🏖 Beaches
+                  </label>
+                  <label class="interest-chip">
+                    <input type="checkbox" value="spiritual" /> 🕌 Spiritual
+                  </label>
+                  <label class="interest-chip">
+                    <input type="checkbox" value="food" /> 🍜 Food
+                  </label>
+                  <label class="interest-chip">
+                    <input type="checkbox" value="adventure" /> 🧗 Adventure
+                  </label>
+                  <label class="interest-chip">
+                    <input type="checkbox" value="nature" /> 🌿 Nature
+                  </label>
+                  <label class="interest-chip">
+                    <input type="checkbox" value="historical" checked /> 🏛 Historical
+                  </label>
+                  <label class="interest-chip checked">
+                    <input type="checkbox" value="family" /> 👨‍👩‍👧 Family
+                  </label>
+                </div>
+              </div>
             </div> <!-- END TRIP ONLY FIELDS -->
 
             <!-- Submit -->
@@ -218,10 +225,14 @@
       <div class="card section-gap">
         <div class="card-title" id="mapSectionTitle">🗺 Trip Map</div>
         <div class="card-subtitle" id="mapSectionSub">Destination and nearby tourist places plotted on the map.</div>
-        
+
         <!-- Safe Route Banners -->
-        <div id="dangerBanner" style="background: #fee2e2; color: #b91c1c; border-left: 4px solid #ef4444; padding: 15px; border-radius: 6px; margin-bottom: 15px; display: none;"></div>
-        <div id="successBanner" style="background: #dcfce7; color: #15803d; border-left: 4px solid #22c55e; padding: 15px; border-radius: 6px; margin-bottom: 15px; display: none;"></div>
+        <div id="dangerBanner"
+          style="background: #fee2e2; color: #b91c1c; border-left: 4px solid #ef4444; padding: 15px; border-radius: 6px; margin-bottom: 15px; display: none;">
+        </div>
+        <div id="successBanner"
+          style="background: #dcfce7; color: #15803d; border-left: 4px solid #22c55e; padding: 15px; border-radius: 6px; margin-bottom: 15px; display: none;">
+        </div>
 
         <div id="trip-map" style="min-height: 400px; z-index: 1;"></div>
       </div>
@@ -237,14 +248,17 @@
       <div class="card section-gap trip-only-result" id="amenitiesSection" style="display:none;">
         <div class="card-title">🏨 Hotels, 🍽️ Restaurants & 🚆 Transport</div>
         <div class="card-subtitle">Essential amenities near your destination.</div>
-        
-        <h3 style="margin-top:20px; font-size:18px; color:var(--primary-dark);"><i class="fas fa-bed"></i> Hotels & Stays</h3>
+
+        <h3 style="margin-top:20px; font-size:18px; color:var(--primary-dark);"><i class="fas fa-bed"></i> Hotels &
+          Stays</h3>
         <div id="hotelsList"></div>
-        
-        <h3 style="margin-top:20px; font-size:18px; color:var(--primary-dark);"><i class="fas fa-utensils"></i> Restaurants & Food</h3>
+
+        <h3 style="margin-top:20px; font-size:18px; color:var(--primary-dark);"><i class="fas fa-utensils"></i>
+          Restaurants & Food</h3>
         <div id="restaurantsList"></div>
 
-        <h3 style="margin-top:20px; font-size:18px; color:var(--primary-dark);"><i class="fas fa-bus"></i> Transport Options</h3>
+        <h3 style="margin-top:20px; font-size:18px; color:var(--primary-dark);"><i class="fas fa-bus"></i> Transport
+          Options</h3>
         <div id="transportList"></div>
       </div>
 
@@ -258,4 +272,5 @@
   <!-- Trip JS -->
   <script src="../js/trip.js"></script>
 </body>
+
 </html>
