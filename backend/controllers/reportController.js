@@ -36,6 +36,20 @@ const createReport = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Invalid severity value' });
         }
 
+        // Validate coordinates if provided
+        if (latitude !== undefined && latitude !== null) {
+            const lat = parseFloat(latitude);
+            if (isNaN(lat) || lat < -90 || lat > 90) {
+                return res.status(400).json({ success: false, message: 'Invalid latitude value. Must be between -90 and 90.' });
+            }
+        }
+        if (longitude !== undefined && longitude !== null) {
+            const lon = parseFloat(longitude);
+            if (isNaN(lon) || lon < -180 || lon > 180) {
+                return res.status(400).json({ success: false, message: 'Invalid longitude value. Must be between -180 and 180.' });
+            }
+        }
+
         const [result] = await pool.query(
             `INSERT INTO disaster_reports 
             (user_id, disaster_type, severity, location, latitude, longitude, description, photo_url) 

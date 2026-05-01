@@ -325,6 +325,13 @@ async function planTrip(req, res) {
     return res.json(response);
   } catch (error) {
     console.error("Trip planning error:", error.message);
+    
+    if (error.response && error.response.status === 429) {
+      return res.status(429).json({
+        error: "One of our external services (Maps/Weather) is busy. Please wait a moment and try again."
+      });
+    }
+
     return res.status(500).json({
       error: error.message || "Something went wrong while planning the trip.",
     });

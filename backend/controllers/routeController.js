@@ -118,7 +118,18 @@ const getSafeRoute = async (req, res) => {
 
     } catch (error) {
         console.error('Route Finder Error:', error.message);
-        res.status(500).json({ success: false, message: error.message || 'Server error while calculating safe route.' });
+        
+        if (error.response && error.response.status === 429) {
+            return res.status(429).json({ 
+                success: false, 
+                message: 'The routing service is temporarily busy (Rate Limit). Please try again in a few seconds.' 
+            });
+        }
+
+        res.status(500).json({ 
+            success: false, 
+            message: error.message || 'Server error while calculating safe route.' 
+        });
     }
 };
 
