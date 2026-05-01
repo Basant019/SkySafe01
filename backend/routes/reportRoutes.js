@@ -6,7 +6,8 @@ const {
     getAllReports,
     getReportById,
     updateReportStatus,
-    deleteReport
+    deleteReport,
+    broadcastReport
 } = require('../controllers/reportController');
 
 // POST /api/reports — User submits a disaster report
@@ -26,5 +27,8 @@ router.put('/:id/status', updateReportStatus);
 
 // DELETE /api/reports/:id — Admin: delete a report
 router.delete('/:id', deleteReport);
+
+// POST /api/reports/:id/broadcast — Admin: broadcast a report to all users
+router.post('/:id/broadcast', broadcastReport);
 
 module.exports = router;

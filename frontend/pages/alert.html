@@ -137,34 +137,6 @@
               </div>
             </div>
 
-            <!-- RESPONSE TIMELINE -->
-            <div class="dm-card mb-4">
-              <div class="card-hdr">
-                <div class="card-hdr-left">
-                  <span class="card-dot blue"></span>
-                  <h2 class="card-title">Response Timeline</h2>
-                </div>
-              </div>
-              <div class="timeline-wrap" id="timelineWrap">
-                <!-- Populated by JS -->
-              </div>
-            </div>
-
-            <!-- RESOURCE DEPLOYMENT -->
-            <div class="dm-card mb-4">
-              <div class="card-hdr">
-                <div class="card-hdr-left">
-                  <span class="card-dot green"></span>
-                  <h2 class="card-title">Resource Deployment</h2>
-                </div>
-                <button class="btn-sm-sky" onclick="openResourceModal()">
-                  <i class="fas fa-plus"></i> Deploy
-                </button>
-              </div>
-              <div class="resource-grid" id="resourceGrid">
-                <!-- Populated by JS -->
-              </div>
-            </div>
 
             <!-- WEATHER-BASED DISASTER MANAGEMENT -->
             <div class="wbd-section">
@@ -622,16 +594,6 @@
         if (!aHam.contains(e.target) && !aMenu.contains(e.target)) {
           aMenu.style.display = 'none';
           aHam.querySelector('i').className = 'fas fa-bars';
-        }
-      });
-    }
-
-    const alertThemeBtn = document.getElementById('themeToggle');
-    if (alertThemeBtn) {
-      alertThemeBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        if (window.themeManager && typeof window.themeManager.toggle === 'function') {
-          window.themeManager.toggle();
         }
       });
     }

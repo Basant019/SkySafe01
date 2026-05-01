@@ -144,6 +144,34 @@ async function loadMapDisasterData() {
       addDisasterMarker(disaster);
     });
     
+    // ADD: Fetch our own backend disasters
+    try {
+      const dbRes = await fetch('https://skysafe01.onrender.com/api/disasters?active=true');
+      if (dbRes.ok) {
+        const dbData = await dbRes.json();
+        if (dbData.success && dbData.alerts) {
+          dbData.alerts.forEach((alert, index) => {
+            if (!alert.latitude || !alert.longitude) return;
+            const categoryInfo = DISASTER_ICONS[alert.alert_type?.toLowerCase()] || { icon: '⚠️', color: '#ffcc00', name: 'Alert' };
+            const disaster = {
+              id: `LOCAL_${alert.id}`,
+              title: `Local Alert: ${alert.location}`,
+              description: alert.description || '',
+              category: categoryInfo.name,
+              icon: categoryInfo.icon,
+              severity: alert.severity || 'moderate',
+              coords: [alert.latitude, alert.longitude],
+              date: alert.created_at || new Date().toISOString(),
+              link: '',
+              sources: []
+            };
+            currentDisasters.push(disaster);
+            addDisasterMarker(disaster);
+          });
+        }
+      }
+    } catch(e) { console.error('Could not load local disasters', e); }
+    
     updateMapSidebar();
     
   } catch(error) {

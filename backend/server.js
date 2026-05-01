@@ -12,6 +12,8 @@ const disasterRoutes = require('./routes/disasterRoutes');
 const tripRoutes     = require('./routes/tripRoutes');
 const reportRoutes   = require('./routes/reportRoutes');
 const adminRoutes    = require('./routes/adminRoutes');
+const notificationRoutes = require('./routes/notificationRoutes');
+const routeRoutes        = require('./routes/routeRoutes');
 
 const app  = express();
 const PORT = process.env.PORT || 5000;
@@ -40,6 +42,8 @@ app.use('/api/disasters', disasterRoutes);
 app.use('/api/trip',     tripRoutes);
 app.use('/api/reports',   reportRoutes);
 app.use('/api/admin',     adminRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/safe-route',    routeRoutes);
 
 // ── Health Check ──────────────────────────────────────────
 app.get('/api/health', (req, res) => {
@@ -53,7 +57,9 @@ app.get('/api/health', (req, res) => {
             disasters: '/api/disasters',
             trip:      '/api/trip',
             reports:   '/api/reports',
-            admin:     '/api/admin'
+            admin:     '/api/admin',
+            notifications: '/api/notifications',
+            safeRoute: '/api/safe-route'
         },
         status: 'OK',
         timestamp: new Date().toISOString()

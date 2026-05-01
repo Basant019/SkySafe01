@@ -14,6 +14,7 @@ router.post('/alerts', createAlert);
 
 // GET /api/disasters/alerts?location=&severity=
 router.get('/alerts', getActiveAlerts);
+router.get('/', getActiveAlerts); // Added for frontend backward compatibility
 
 // GET /api/disasters/alerts/location/:location
 router.get('/alerts/location/:location', getAlertsByLocation);

@@ -202,7 +202,43 @@ function renderUserContent() {
                 ${allTrips.length ? buildTripCards(allTrips) : emptyState('fas fa-map-location-dot', 'No trips saved', 'Head over to the Trip Planner to create and save your first trip.')}
             </div>
         </div>
+
+        <!-- My Notifications -->
+        <div style="grid-column: 1 / -1; margin-top: 20px;">
+            <div class="section-header">
+                <h2 class="section-title"><i class="fas fa-bell"></i> Notifications</h2>
+            </div>
+            <div id="userNotificationsContainer">
+                <div class="loading-spinner"><div class="spinner"></div></div>
+            </div>
+        </div>
     `;
+
+    fetchAndRenderNotifications();
+}
+
+async function fetchAndRenderNotifications() {
+    try {
+        const d = await authFetch(`${API}/notifications`);
+        const container = document.getElementById('userNotificationsContainer');
+        if (d.success && d.notifications && d.notifications.length > 0) {
+            container.innerHTML = `<div class="cards-grid" style="grid-template-columns: 1fr;">${d.notifications.map(n => `
+                <div class="report-card ${n.type}" style="border-left-color: var(--${n.type === 'disaster' ? 'danger' : 'accent'})">
+                    <div class="card-top">
+                        <div style="flex:1">
+                            <div class="card-title" style="color: var(--${n.type === 'disaster' ? 'danger' : 'text-primary'})">${n.title}</div>
+                        </div>
+                        <span style="font-size: 12px; color: var(--text-muted);"><i class="fas fa-clock"></i> ${formatDate(n.created_at)}</span>
+                    </div>
+                    <p class="card-desc" style="font-size: 14px; margin-top: 5px;">${n.message}</p>
+                </div>
+            `).join('')}</div>`;
+        } else {
+            container.innerHTML = emptyState('fas fa-bell-slash', 'No notifications', 'You are all caught up!');
+        }
+    } catch {
+        document.getElementById('userNotificationsContainer').innerHTML = emptyState('fas fa-exclamation-triangle', 'Error loading notifications', '');
+    }
 }
 
 // ═══════════════════════════════════════════════════════
@@ -220,6 +256,7 @@ async function renderAdminDashboard() {
                 <option value="reviewing">Reviewing</option>
                 <option value="resolved">Resolved</option>
                 <option value="rejected">Rejected</option>
+                <option value="verified">Verified</option>
             </select>
             <select class="filter-select" id="adminSevFilter" onchange="filterAdminReports()">
                 <option value="">All Severities</option>
@@ -262,7 +299,12 @@ function renderAdminContent() {
         <div>
             <div class="section-header">
                 <h2 class="section-title"><i class="fas fa-file-lines"></i> All Disaster Reports</h2>
-                <span class="badge badge-pending" id="reportCountBadge">${allReports.length} reports</span>
+                <div style="display:flex;gap:10px;align-items:center;">
+                    <span class="badge badge-pending" id="reportCountBadge">${allReports.length} reports</span>
+                    <button class="btn btn-danger btn-sm" onclick="openCreateAlertModal()">
+                        <i class="fas fa-plus"></i> Create Alert
+                    </button>
+                </div>
             </div>
             <div class="table-card">
                 <div class="table-wrap">
@@ -420,6 +462,7 @@ function buildAdminReportsRows(reports) {
                 <div style="display:flex;gap:6px">
                     <button class="btn btn-ghost btn-sm" onclick="viewReport(${r.id})" title="View"><i class="fas fa-eye"></i></button>
                     <button class="btn btn-warning btn-sm" onclick="openUpdateReport(${r.id})" title="Update"><i class="fas fa-pen"></i></button>
+                    ${r.status === 'verified' ? `<button class="btn btn-accent btn-sm" onclick="broadcastReport(${r.id})" title="Broadcast to All Users"><i class="fas fa-bullhorn"></i></button>` : ''}
                     <button class="btn btn-danger btn-sm" onclick="deleteReport(${r.id})" title="Delete"><i class="fas fa-trash"></i></button>
                 </div>
             </td>
@@ -602,6 +645,69 @@ async function deleteReport(id) {
             }
         } else toast(d.message || 'Delete failed', 'error');
     } catch { toast('Network error', 'error'); }
+}
+
+async function broadcastReport(id) {
+    if (!confirm('Are you sure you want to broadcast this disaster alert to ALL users?')) return;
+    try {
+        const res = await authFetch(`${API}/reports/${id}/broadcast`, { method: 'POST' });
+        if (res.success) {
+            toast('Alert broadcasted to all users successfully 📢', 'success');
+        } else {
+            toast(res.message || 'Broadcast failed', 'error');
+        }
+    } catch {
+        toast('Network error during broadcast', 'error');
+    }
+}
+
+// Admin: Manual Alert Creation
+function openCreateAlertModal() {
+    const type = prompt("Enter disaster type (e.g. flood, earthquake, storm):");
+    if (!type) return;
+    const severity = prompt("Enter severity (low, medium, high, critical):");
+    if (!severity) return;
+    const loc = prompt("Enter location (e.g. Mumbai):");
+    if (!loc) return;
+    const desc = prompt("Enter description:");
+    if (!desc) return;
+
+    createAdminAlert(type, severity, loc, desc);
+}
+
+async function createAdminAlert(type, severity, loc, desc) {
+    try {
+        const payload = {
+            alert_type: type,
+            severity: severity,
+            location: loc,
+            description: desc,
+            effective_date: new Date().toISOString(),
+            created_by: currentUser.id
+        };
+        const res = await authFetch(`${API}/disasters/alerts`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        if (res.success) {
+            toast('Disaster alert created successfully!', 'success');
+            // Broadcast it immediately as well
+            await authFetch(`${API}/notifications`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    user_id: 1, // trigger smart broadcast via condition
+                    condition: "disaster",
+                    location: loc
+                })
+            });
+        } else {
+            toast(res.message || 'Failed to create alert', 'error');
+        }
+    } catch {
+        toast('Network error while creating alert', 'error');
+    }
 }
 
 // ═══════════════════════════════════════════════════════
@@ -821,7 +927,7 @@ function disasterIcon(type) {
 }
 
 function statusLabel(s) {
-    const labels = { pending: '⏳ Pending', reviewing: '🔍 Reviewing', resolved: '✅ Resolved', rejected: '❌ Rejected' };
+    const labels = { pending: '⏳ Pending', reviewing: '🔍 Reviewing', resolved: '✅ Resolved', rejected: '❌ Rejected', verified: '✅ Verified' };
     return labels[s] || s;
 }
 

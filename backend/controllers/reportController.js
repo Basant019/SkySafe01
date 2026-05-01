@@ -1,4 +1,5 @@
 const { pool } = require('../config/db');
+const { createAndSendNotification } = require('../services/notificationService');
 
 // POST /api/reports — User submits a disaster report
 const createReport = async (req, res) => {
@@ -159,7 +160,7 @@ const updateReportStatus = async (req, res) => {
         const { id } = req.params;
         const { status, admin_notes, admin_id } = req.body;
 
-        const validStatuses = ['pending', 'reviewing', 'resolved', 'rejected'];
+        const validStatuses = ['pending', 'reviewing', 'resolved', 'rejected', 'verified'];
         if (!status || !validStatuses.includes(status)) {
             return res.status(400).json({ success: false, message: 'Invalid status value' });
         }
@@ -170,6 +171,22 @@ const updateReportStatus = async (req, res) => {
              WHERE id = ?`,
             [status, admin_notes || null, admin_id || null, id]
         );
+
+        // --- Auto-create an alert if verified ---
+        if (status === 'verified') {
+            const [reports] = await pool.query('SELECT * FROM disaster_reports WHERE id = ?', [id]);
+            if (reports.length > 0) {
+                const r = reports[0];
+                const expires = new Date();
+                expires.setHours(expires.getHours() + 48); // Alert active for 48 hours
+                await pool.query(
+                    `INSERT INTO disaster_alerts 
+                    (alert_type, severity, location, description, latitude, longitude, effective_date, expires_at, created_by) 
+                    VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?, ?)`,
+                    [r.disaster_type, r.severity, r.location, r.description || 'Verified User Report', r.latitude, r.longitude, expires, admin_id || null]
+                );
+            }
+        }
 
         res.status(200).json({ success: true, message: `Report marked as ${status}` });
 
@@ -191,11 +208,50 @@ const deleteReport = async (req, res) => {
     }
 };
 
+// POST /api/reports/:id/broadcast — Admin broadcasts a report to all users
+const broadcastReport = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // Fetch the report
+        const [reports] = await pool.query('SELECT * FROM disaster_reports WHERE id = ?', [id]);
+        if (reports.length === 0) {
+            return res.status(404).json({ success: false, message: 'Report not found' });
+        }
+        const report = reports[0];
+
+        // Fetch all users
+        const [users] = await pool.query('SELECT id, email FROM users');
+        
+        // Create notifications for all users
+        let count = 0;
+        for (const user of users) {
+            // Send in-app notification to everyone. Optionally, send email if needed, but we default to false to avoid spam.
+            await createAndSendNotification(
+                user.id,
+                'disaster',
+                `🚨 NEW DISASTER ALERT: ${report.disaster_type} in ${report.location}`,
+                `An admin has broadcasted an important user report: ${report.description}. Severity: ${report.severity.toUpperCase()}. Please stay safe.`,
+                false, // Don't spam emails for every broadcast, or change to true if wanted
+                user.email
+            );
+            count++;
+        }
+
+        res.status(200).json({ success: true, message: `Alert broadcasted to ${count} users successfully.` });
+
+    } catch (error) {
+        console.error('Broadcast Report Error:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
 module.exports = {
     createReport,
     getUserReports,
     getAllReports,
     getReportById,
     updateReportStatus,
-    deleteReport
+    deleteReport,
+    broadcastReport
 };

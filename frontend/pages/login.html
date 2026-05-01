@@ -180,10 +180,10 @@
 
       <!-- Tab Switcher -->
       <div class="tab-switcher">
-        <button class="tab-btn active" id="tabUser" onclick="switchTab('user')">
+        <button type="button" class="tab-btn active" id="tabUser">
           <i class="fas fa-user"></i> User Login
         </button>
-        <button class="tab-btn" id="tabAdmin" onclick="switchTab('admin')">
+        <button type="button" class="tab-btn" id="tabAdmin">
           <i class="fas fa-shield-halved"></i> Admin Login
         </button>
       </div>
@@ -256,22 +256,31 @@
       const tabAdmin = document.getElementById('tabAdmin');
       const btn      = document.getElementById('loginBtn');
       const btnText  = document.getElementById('loginBtnText');
+      const emailInput = document.getElementById('loginEmail');
+      const pwdInput = document.getElementById('loginPassword');
 
       if (role === 'admin') {
         tabUser.classList.remove('active');
         tabAdmin.classList.add('active');
         btn.classList.add('admin-mode');
         btnText.innerHTML = '<i class="fas fa-shield-halved"></i> Admin Sign In';
-        document.getElementById('loginEmail').placeholder = 'admin@skysafe.com';
+        emailInput.placeholder = 'admin@skysafe.com';
+        emailInput.value = 'admin@skysafe.com';
+        pwdInput.value = 'Admin@123';
       } else {
         tabAdmin.classList.remove('active');
         tabUser.classList.add('active');
         btn.classList.remove('admin-mode');
         btnText.innerHTML = '<i class="fas fa-arrow-right-to-bracket"></i> Sign In';
-        document.getElementById('loginEmail').placeholder = 'you@example.com';
+        emailInput.placeholder = 'you@example.com';
+        emailInput.value = '';
+        pwdInput.value = '';
       }
       clearMsg();
     }
+
+    document.getElementById('tabUser').addEventListener('click', () => switchTab('user'));
+    document.getElementById('tabAdmin').addEventListener('click', () => switchTab('admin'));
 
     // ── Toggle Password Visibility ────────────────
     function togglePassword() {
@@ -370,17 +379,21 @@
       }
     });
 
-    // ── Auto-fill admin credentials hint ─────────
-    document.getElementById('tabAdmin').addEventListener('click', () => {
-      // Don't auto-fill — just hint
-    });
-
     // ── Check if already logged in ────────────────
     (function checkAuth() {
-      const token = localStorage.getItem('skysafe_token');
-      const user  = JSON.parse(localStorage.getItem('skysafe_user') || 'null');
-      if (token && user) {
-        window.location.href = 'dashboard.html';
+      try {
+        const token = localStorage.getItem('skysafe_token');
+        const userStr = localStorage.getItem('skysafe_user');
+        const user  = userStr ? JSON.parse(userStr) : null;
+        if (token && user) {
+          window.location.href = 'dashboard.html';
+        }
+      } catch (err) {
+        // If JSON.parse fails due to corrupted localStorage, clear it
+        localStorage.removeItem('skysafe_token');
+        localStorage.removeItem('skysafe_user');
+        localStorage.removeItem('skysafe_role');
+        console.warn('Cleared corrupted localStorage');
       }
     })();
   </script>

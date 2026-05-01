@@ -1,7 +1,7 @@
 // backend/controllers/tripController.js
 const { geocodeCity } = require("../services/geoService");
 const { getWeather } = require("../services/weatherService");
-const { getNearbyPlaces } = require("../services/placeService");
+const { getNearbyPlaces, getAmenities } = require("../services/placeService");
 
 // Day theme rotation for variety
 const DAY_THEMES = [
@@ -260,6 +260,9 @@ async function planTrip(req, res) {
     // 3. Fetch nearby places from OpenTripMap
     const places = await getNearbyPlaces(geo.lat, geo.lon, selectedInterests, weather.category);
 
+    // 3b. Fetch amenities (hotels, restaurants, transport)
+    const amenities = await getAmenities(geo.lat, geo.lon);
+
     // 4. Build day-wise itinerary
     const itinerary = buildItinerary(places, days, weather.category);
 
@@ -313,6 +316,7 @@ async function planTrip(req, res) {
         image: p.image,
         kinds: p.kinds,
       })),
+      amenities,
       budgetEstimate,
       packingList,
       safetyTips,

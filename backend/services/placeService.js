@@ -140,4 +140,59 @@ async function getPlaceDetails(xid, apiKey) {
   }
 }
 
-module.exports = { getNearbyPlaces };
+/**
+ * Fetch hotels, restaurants, and transport points from OpenTripMap API.
+ */
+async function getAmenities(lat, lon) {
+  const apiKey = process.env.OPENTRIPMAP_API_KEY;
+  if (!apiKey) return { hotels: [], restaurants: [], transport: [] };
+
+  const [hotelsRes, restaurantsRes, transportRes] = await Promise.all([
+    fetchPlaces(lat, lon, "accommodations", apiKey, 2, 15000, 5),
+    fetchPlaces(lat, lon, "foods", apiKey, 2, 15000, 5),
+    fetchPlaces(lat, lon, "transport", apiKey, 1, 25000, 5)
+  ]);
+
+  const processAmenities = async (places) => {
+    if (!places || places.length === 0) return [];
+    const detailed = await Promise.allSettled(
+      places.map((p) => getAmenityDetails(p.xid, apiKey))
+    );
+    return detailed
+      .filter((r) => r.status === "fulfilled" && r.value !== null)
+      .map((r) => r.value);
+  };
+
+  const [hotels, restaurants, transport] = await Promise.all([
+    processAmenities(hotelsRes),
+    processAmenities(restaurantsRes),
+    processAmenities(transportRes)
+  ]);
+
+  return { hotels, restaurants, transport };
+}
+
+async function getAmenityDetails(xid, apiKey) {
+  try {
+    const res = await axios.get(
+      `https://api.opentripmap.com/0.1/en/places/xid/${xid}`,
+      { params: { apikey: apiKey } }
+    );
+    const d = res.data;
+    if (!d || !d.name || d.name.trim().length < 2) return null;
+    
+    return {
+      name: d.name,
+      lat: d.point?.lat || null,
+      lon: d.point?.lon || null,
+      kinds: d.kinds || "",
+      description: d.wikipedia_extracts?.text ? d.wikipedia_extracts.text.slice(0, 100) + "..." : "",
+      image: d.preview?.source || null,
+      address: d.address ? [d.address.road, d.address.city].filter(Boolean).join(", ") : "Local area"
+    };
+  } catch {
+    return null;
+  }
+}
+
+module.exports = { getNearbyPlaces, getAmenities };

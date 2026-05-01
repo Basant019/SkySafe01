@@ -2,7 +2,7 @@
  * SkySafe Authentication Module
  * Handles both Login and Registration in one file
  * Auto-detects page type based on form elements present
- * API Base URL: http://localhost:5000/api
+ * API Base URL: https://skysafe01.onrender.com/api
  */
 
 const API_BASE_URL = 'https://skysafe01.onrender.com/api';

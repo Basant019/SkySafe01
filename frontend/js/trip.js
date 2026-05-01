@@ -121,10 +121,54 @@ document.addEventListener("click", (e) => {
   }
 });
 
+// ─── Mode Switching (Trip vs Route) ────────────────────────────────
+let currentMode = 'trip';
+const tabTripBtn = document.getElementById("tabTripBtn");
+const tabRouteBtn = document.getElementById("tabRouteBtn");
+const tripOnlyFields = document.getElementById("tripOnlyFields");
+const submitBtn = document.getElementById("submitBtn");
+const btnText = document.getElementById("btnText");
+
+if (tabTripBtn && tabRouteBtn) {
+  tabTripBtn.addEventListener("click", () => {
+    currentMode = 'trip';
+    tabTripBtn.style.background = 'var(--primary)';
+    tabTripBtn.style.color = '#fff';
+    tabTripBtn.style.border = 'none';
+    
+    tabRouteBtn.style.background = 'var(--surface-primary)';
+    tabRouteBtn.style.color = 'var(--text-secondary)';
+    tabRouteBtn.style.border = '1px solid var(--border)';
+    
+    tripOnlyFields.style.display = 'contents';
+    btnText.textContent = "✈️ Plan My Trip";
+    document.getElementById("travelDate").required = true;
+  });
+
+  tabRouteBtn.addEventListener("click", () => {
+    currentMode = 'route';
+    tabRouteBtn.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+    tabRouteBtn.style.color = '#fff';
+    tabRouteBtn.style.border = 'none';
+    
+    tabTripBtn.style.background = 'var(--surface-primary)';
+    tabTripBtn.style.color = 'var(--text-secondary)';
+    tabTripBtn.style.border = '1px solid var(--border)';
+    
+    tripOnlyFields.style.display = 'none';
+    btnText.textContent = "🛡️ Find Safe Route";
+    document.getElementById("travelDate").required = false;
+  });
+}
+
 // ─── Form Submit ─────────────────────────────────────────────────
 document.getElementById("tripForm").addEventListener("submit", async (e) => {
   e.preventDefault();
-  await planTrip();
+  if (currentMode === 'trip') {
+    await planTrip();
+  } else {
+    await findSafeRoute();
+  }
 });
 
 async function planTrip() {
@@ -218,16 +262,150 @@ function showError(msg) {
   banner.scrollIntoView({ behavior: "smooth" });
 }
 
-// ─── Render Results ──────────────────────────────────────────────
+function hideBanner(id) {
+  const el = document.getElementById(id);
+  if (el) el.style.display = 'none';
+}
+
+function showBanner(id, msg) {
+  const el = document.getElementById(id);
+  if (el) {
+    el.innerHTML = msg;
+    el.style.display = 'block';
+  }
+}
+
+// ─── Safe Route Logic ──────────────────────────────────────────────
+async function findSafeRoute() {
+  const btn = document.getElementById("submitBtn");
+  const btnText = document.getElementById("btnText");
+  const spinner = document.getElementById("btnSpinner");
+  const src = document.getElementById("currentLocation").value.trim();
+  const dst = document.getElementById("destination").value.trim();
+
+  if (!src || !dst) {
+    showError("Please fill in both Current Location and Destination.");
+    return;
+  }
+
+  btn.disabled = true;
+  btnText.textContent = "Calculating Route...";
+  spinner.style.display = "block";
+  document.getElementById("errorBanner").classList.remove("visible");
+
+  hideBanner("dangerBanner");
+  hideBanner("successBanner");
+
+  // Hide trip-only result sections
+  document.querySelectorAll(".trip-only-result").forEach(el => el.style.display = 'none');
+  
+  // Show map section
+  document.getElementById("results").classList.add("visible");
+  document.getElementById("mapSectionTitle").innerHTML = `🛡️ Safe Route: <span style="color:var(--text-secondary);font-size:16px;">${src} → ${dst}</span>`;
+  document.getElementById("mapSectionSub").innerText = "Displaying the safest route avoiding disaster zones.";
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/safe-route`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ source: src, destination: dst })
+    });
+    const data = await res.json();
+    
+    if (data.success) {
+      if (data.warning) {
+        showBanner("dangerBanner", `⚠️ ${data.warning}`);
+      } else {
+        showBanner("successBanner", `✅ <strong>Safe Route Found!</strong> Successfully avoided ${data.disastersAvoided || 0} disaster zones.`);
+      }
+      drawRoute(data.route, data.source, data.destination, true);
+      document.getElementById("results").scrollIntoView({ behavior: "smooth", block: "start" });
+    } else {
+      showBanner("dangerBanner", `🚨 <strong>${data.message || 'Failed to find route.'}</strong> ${data.warning || ''}`);
+      if (data.route) {
+        drawRoute(data.route, data.source, data.destination, false);
+      }
+    }
+  } catch (err) {
+    showError("Network error while fetching safe route.");
+  } finally {
+    btn.disabled = false;
+    btnText.textContent = "🛡️ Find Safe Route";
+    spinner.style.display = "none";
+  }
+}
+
+let routeLayer = null;
+
+function drawRoute(route, src, dst, isSafe) {
+  if (map) {
+    map.remove();
+    map = null;
+  }
+
+  map = L.map("trip-map");
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    attribution: '© OpenStreetMap'
+  }).addTo(map);
+
+  const latLngs = route.geometry.coordinates.map(coord => [coord[1], coord[0]]);
+  const color = isSafe ? '#3b82f6' : '#ef4444'; // Blue if safe, Red if unsafe
+  
+  routeLayer = L.polyline(latLngs, { color: color, weight: 6, opacity: 0.8 }).addTo(map);
+  map.fitBounds(routeLayer.getBounds(), { padding: [50, 50] });
+
+  // Start Marker (Green)
+  const startIcon = L.icon({
+    iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png",
+    shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
+    iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34]
+  });
+  L.marker([src.lat, src.lon], {icon: startIcon}).addTo(map).bindPopup("<b>Start:</b> " + src.displayName);
+
+  // End Marker (Red)
+  const endIcon = L.icon({
+    iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png",
+    shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
+    iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34]
+  });
+  L.marker([dst.lat, dst.lon], {icon: endIcon}).addTo(map).bindPopup("<b>End:</b> " + dst.displayName);
+}
+
+// ─── Render Results (Trip Planner) ──────────────────────────────────────────────
 function renderResults(data) {
-  renderTripSummary(data.trip);
-  renderWeather(data.weather);
-  renderItinerary(data.itinerary);
-  renderBudget(data.budgetEstimate, data.trip);
-  renderPacking(data.packingList);
-  renderSafety(data.safetyTips);
-  renderPlaces(data.nearbyPlaces);
-  renderMap(data.trip.coordinates, data.nearbyPlaces, data.trip.to);
+    document.querySelectorAll(".trip-only-result").forEach(el => {
+      // Revert from display none if they were hidden by Safe Route mode
+      el.style.display = el.id === 'amenitiesSection' ? 'block' : ''; 
+      if (el.classList.contains("results-grid")) el.style.display = 'grid';
+    });
+    
+    hideBanner("dangerBanner");
+    hideBanner("successBanner");
+    document.getElementById("mapSectionTitle").innerText = "🗺 Trip Map";
+    document.getElementById("mapSectionSub").innerText = "Destination and nearby tourist places plotted on the map.";
+
+    renderTripSummary(data.trip);
+    renderWeather(data.weather);
+    renderItinerary(data.itinerary);
+    renderBudget(data.budgetEstimate, data.trip);
+    renderPacking(data.packingList);
+    renderSafety(data.safetyTips);
+    renderPlaces(data.nearbyPlaces);
+    
+    if (data.amenities) {
+      renderAmenities(data.amenities);
+    }
+
+    // Pass places AND amenities to map
+    let allMapPlaces = [...(data.nearbyPlaces || [])];
+    if (data.amenities) {
+      allMapPlaces = allMapPlaces.concat(data.amenities.hotels || [])
+                                 .concat(data.amenities.restaurants || [])
+                                 .concat(data.amenities.transport || []);
+    }
+    
+    // Slight delay for map to render properly inside its container
+    setTimeout(() => renderMap(data.trip.coordinates, allMapPlaces, data.trip.to), 100);
 }
 
 // Trip Summary Bar with Progress
@@ -411,6 +589,38 @@ function renderPlaces(places) {
       </div>
     </div>
   `).join("")}</div>`;
+}
+
+// Amenities
+function renderAmenities(amenities) {
+  const section = document.getElementById("amenitiesSection");
+  if (!amenities || (!amenities.hotels.length && !amenities.restaurants.length && !amenities.transport.length)) {
+    section.style.display = "none";
+    return;
+  }
+  
+  section.style.display = "block";
+  
+  const renderList = (places, containerId, fallbackMsg) => {
+    const container = document.getElementById(containerId);
+    if (!places || places.length === 0) {
+      container.innerHTML = `<p style="color:var(--text-muted);font-size:0.9rem;">${fallbackMsg}</p>`;
+      return;
+    }
+    container.innerHTML = `<div class="place-list" style="margin-bottom:20px;">${places.map(p => `
+      <div class="place-card fade-in" style="min-width: 250px;">
+        <div class="place-card-body" style="padding: 15px;">
+          <h4 style="margin:0 0 5px 0;">${p.name}</h4>
+          <p style="margin:0 0 10px 0; font-size:12px;">${p.description || "Local amenity"}</p>
+          <small style="color:#666;"><i class="fas fa-map-marker-alt"></i> ${p.address || ""}</small>
+        </div>
+      </div>
+    `).join("")}</div>`;
+  };
+
+  renderList(amenities.hotels, "hotelsList", "No hotels found nearby.");
+  renderList(amenities.restaurants, "restaurantsList", "No restaurants found nearby.");
+  renderList(amenities.transport, "transportList", "No transport points found nearby.");
 }
 
 // Map

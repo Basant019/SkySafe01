@@ -62,14 +62,24 @@
     <!-- FORM CARD -->
     <div class="form-card-outer">
       <div class="card">
-        <div class="card-title">✈️ Plan Your Trip</div>
-        <div class="card-subtitle">Fill in the details below and we'll generate a smart itinerary for you.</div>
+        <div class="card-title">🗺️ Navigation Hub</div>
+        <div class="card-subtitle">Choose between comprehensive Trip Planning or an instant Safe Route finder.</div>
+
+        <!-- TAB SWITCHER -->
+        <div style="display:flex; gap: 10px; margin-bottom: 24px; margin-top: 10px;">
+          <button type="button" id="tabTripBtn" class="btn-submit" style="flex:1; background: var(--primary); color:#fff; font-size:14px; padding:12px; transition: 0.3s;">
+            ✈️ Trip Planner
+          </button>
+          <button type="button" id="tabRouteBtn" class="btn-submit" style="flex:1; background: var(--surface-primary); color:var(--text-secondary); font-size:14px; padding:12px; border: 1px solid var(--border); box-shadow: none; transition: 0.3s;">
+            🛡️ Safe Route
+          </button>
+        </div>
 
         <form id="tripForm" autocomplete="off">
           <div class="form-grid">
 
             <div class="form-group">
-              <label for="currentLocation">Current Location</label>
+              <label for="currentLocation">Current Location *</label>
               <input type="text" id="currentLocation" placeholder="e.g. Delhi" />
             </div>
 
@@ -78,9 +88,11 @@
               <input type="text" id="destination" placeholder="e.g. Manali" required />
             </div>
 
+            <!-- START TRIP ONLY FIELDS -->
+            <div id="tripOnlyFields" style="display: contents;">
             <div class="form-group">
               <label for="travelDate">Travel Date *</label>
-              <input type="date" id="travelDate" required />
+              <input type="date" id="travelDate" />
             </div>
 
             <div class="form-group">
@@ -132,6 +144,7 @@
                 </label>
               </div>
             </div>
+            </div> <!-- END TRIP ONLY FIELDS -->
 
             <!-- Submit -->
             <div class="form-group full">
@@ -153,9 +166,9 @@
     <div id="results" class="section-gap">
 
       <!-- Trip Summary Bar -->
-      <div class="trip-summary-bar" id="tripSummary"></div>
+      <div class="trip-summary-bar trip-only-result" id="tripSummary"></div>
 
-      <div class="results-grid">
+      <div class="results-grid trip-only-result" id="tripResultsGrid">
 
         <!-- Left Column -->
         <div>
@@ -203,16 +216,36 @@
 
       <!-- Map (full width) -->
       <div class="card section-gap">
-        <div class="card-title">🗺 Trip Map</div>
-        <div class="card-subtitle">Destination and nearby tourist places plotted on the map.</div>
-        <div id="trip-map"></div>
+        <div class="card-title" id="mapSectionTitle">🗺 Trip Map</div>
+        <div class="card-subtitle" id="mapSectionSub">Destination and nearby tourist places plotted on the map.</div>
+        
+        <!-- Safe Route Banners -->
+        <div id="dangerBanner" style="background: #fee2e2; color: #b91c1c; border-left: 4px solid #ef4444; padding: 15px; border-radius: 6px; margin-bottom: 15px; display: none;"></div>
+        <div id="successBanner" style="background: #dcfce7; color: #15803d; border-left: 4px solid #22c55e; padding: 15px; border-radius: 6px; margin-bottom: 15px; display: none;"></div>
+
+        <div id="trip-map" style="min-height: 400px; z-index: 1;"></div>
       </div>
 
       <!-- Nearby Places Grid -->
-      <div class="card section-gap">
+      <div class="card section-gap trip-only-result">
         <div class="card-title">📌 Nearby Places</div>
         <div class="card-subtitle">Real tourist attractions near your destination.</div>
         <div id="placesList"></div>
+      </div>
+
+      <!-- Amenities Section -->
+      <div class="card section-gap trip-only-result" id="amenitiesSection" style="display:none;">
+        <div class="card-title">🏨 Hotels, 🍽️ Restaurants & 🚆 Transport</div>
+        <div class="card-subtitle">Essential amenities near your destination.</div>
+        
+        <h3 style="margin-top:20px; font-size:18px; color:var(--primary-dark);"><i class="fas fa-bed"></i> Hotels & Stays</h3>
+        <div id="hotelsList"></div>
+        
+        <h3 style="margin-top:20px; font-size:18px; color:var(--primary-dark);"><i class="fas fa-utensils"></i> Restaurants & Food</h3>
+        <div id="restaurantsList"></div>
+
+        <h3 style="margin-top:20px; font-size:18px; color:var(--primary-dark);"><i class="fas fa-bus"></i> Transport Options</h3>
+        <div id="transportList"></div>
       </div>
 
     </div>
