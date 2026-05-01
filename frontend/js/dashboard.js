@@ -245,7 +245,7 @@ async function fetchAndRenderNotifications() {
 //  ██████  ADMIN DASHBOARD
 // ═══════════════════════════════════════════════════════
 async function renderAdminDashboard() {
-    document.getElementById('dashTitle').textContent    = 'Admin Control Panel';
+    document.getElementById('dashTitle').innerHTML    = 'Admin Control Panel <span id="liveIndicator" style="font-size: 11px; vertical-align: middle; background: rgba(16, 185, 129, 0.2); color: #10b981; padding: 2px 8px; border-radius: 50px; margin-left: 10px; font-family: Inter, sans-serif; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;"><span style="width:6px; height:6px; background:#10b981; border-radius:50%; animation: pulse 2s infinite;"></span> LIVE</span>';
     document.getElementById('dashSubtitle').textContent = 'Review all disaster reports and manage trip records';
 
     document.getElementById('headerAction').innerHTML = `
@@ -266,19 +266,39 @@ async function renderAdminDashboard() {
                 <option value="critical">Critical</option>
             </select>
             <input class="filter-input" id="adminLocFilter" type="text" placeholder="Filter by location..." oninput="filterAdminReports()" />
+            <button class="btn btn-ghost btn-sm" onclick="refreshAdminData()" title="Manual Refresh"><i class="fas fa-rotate"></i></button>
         </div>`;
 
-    const [reports, trips] = await Promise.all([
-        fetchAllReports(),
-        fetchAllTrips()
-    ]);
+    await refreshAdminData();
+    
+    // Start Polling for real-time updates (every 30 seconds)
+    if (!window.adminRefreshInterval) {
+        window.adminRefreshInterval = setInterval(refreshAdminData, 30000);
+    }
+}
 
-    allReports = reports.reports || [];
-    reportStats = reports.stats || {};
-    allTrips   = trips;
+async function refreshAdminData() {
+    try {
+        const [reports, trips] = await Promise.all([
+            fetchAllReports(),
+            fetchAllTrips()
+        ]);
 
-    renderAdminStats();
-    renderAdminContent();
+        const prevCount = allReports.length;
+        allReports = reports.reports || [];
+        reportStats = reports.stats || {};
+        allTrips   = trips;
+
+        renderAdminStats();
+        renderAdminContent();
+        filterAdminReports(); // Re-apply current filters
+
+        if (allReports.length > prevCount && prevCount > 0) {
+            toast('New disaster report received! 🚨', 'warning');
+        }
+    } catch (e) {
+        console.warn('Auto-refresh failed:', e.message);
+    }
 }
 
 function renderAdminStats() {
