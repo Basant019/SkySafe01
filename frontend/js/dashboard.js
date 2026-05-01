@@ -112,6 +112,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     initNavbar();
     fetchAndShowLiveAlerts();
+    initRealTime();
 
     try {
         if (currentUser.role === 'admin') await renderAdminDashboard();
@@ -127,6 +128,41 @@ document.addEventListener('DOMContentLoaded', async () => {
         window.location.href = 'login.html';
     });
 });
+
+// ── REAL-TIME (SOCKET.IO) ──────────────────────────────────
+function initRealTime() {
+    if (typeof io === 'undefined') {
+        console.warn('Socket.io client not loaded.');
+        return;
+    }
+
+    const socket = io();
+
+    // Listener for admins: New report received
+    socket.on('new_report', (report) => {
+        if (currentUser.role === 'admin') {
+            toast(`New disaster report received! 🚨 (${capitalize(report.disaster_type)} in ${report.location})`, 'info');
+            // Refresh admin data instantly
+            refreshAdminData();
+        }
+    });
+
+    // Listener for all users: Admin broadcast
+    socket.on('broadcast_alert', (alert) => {
+        // Show a more prominent notification
+        const alertMsg = `
+            <div style="font-weight:700; margin-bottom:4px">${alert.title}</div>
+            <div style="font-size:12px">${alert.description}</div>
+            <div style="font-size:11px; margin-top:4px; opacity:0.8"><i class="fas fa-location-dot"></i> ${alert.location}</div>
+        `;
+        toast(alertMsg, 'error');
+        
+        // Also refresh live alerts list if it exists
+        fetchAndShowLiveAlerts();
+    });
+
+    console.log('⚡ Real-time synchronization active.');
+}
 
 // ═══════════════════════════════════════════════════════
 //  NAVBAR
@@ -307,11 +343,6 @@ async function renderAdminDashboard() {
         </div>`;
 
     await refreshAdminData();
-    
-    // Start Polling for real-time updates (every 30 seconds)
-    if (!window.adminRefreshInterval) {
-        window.adminRefreshInterval = setInterval(refreshAdminData, 30000);
-    }
 }
 
 async function refreshAdminData() {
@@ -957,6 +988,47 @@ function showFormMsg(id, msg, type) {
     el.style.display = 'block';
     el.style.color = type === 'error' ? 'var(--danger)' : 'var(--success)';
     setTimeout(() => { el.style.display = 'none'; }, 4000);
+}
+
+function openCreateAlertModal() {
+    document.getElementById('caLocation').value = '';
+    document.getElementById('caDescription').value = '';
+    openModal('createAlertModal');
+}
+
+async function submitGlobalAlert() {
+    const type = document.getElementById('caType').value;
+    const sev  = document.getElementById('caSeverity').value;
+    const loc  = document.getElementById('caLocation').value.trim();
+    const desc = document.getElementById('caDescription').value.trim();
+
+    if (!loc || !desc) {
+        toast('Please fill in location and message', 'error');
+        return;
+    }
+
+    try {
+        const res = await authFetch(`${API}/disasters`, {
+            method: 'POST',
+            body: JSON.stringify({
+                alert_type: type,
+                severity: sev,
+                location: loc,
+                description: desc,
+                effective_date: new Date(),
+                created_by: currentUser.id
+            })
+        });
+
+        if (res.success) {
+            closeModal('createAlertModal');
+            toast('Global alert broadcasted successfully! 📢', 'success');
+        } else {
+            toast(res.message || 'Failed to broadcast', 'error');
+        }
+    } catch {
+        toast('Network error', 'error');
+    }
 }
 
 // ═══════════════════════════════════════════════════════

@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
   <link rel="stylesheet" href="../css/global.css" />
   <link rel="stylesheet" href="../css/dashboard.css" />
+  <script src="/socket.io/socket.io.js"></script>
   <script src="../js/theme.js"></script>
 </head>
 <body>
@@ -294,6 +295,51 @@
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('addUpdateModal')">Cancel</button>
       <button class="btn btn-success" onclick="saveTripUpdate()"><i class="fas fa-plus"></i> Add to Trip</button>
+    </div>
+  </div>
+</div>
+
+<!-- Admin: Create Global Alert Modal -->
+<div class="modal-overlay" id="createAlertModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title"><i class="fas fa-bullhorn" style="color:var(--danger);margin-right:8px"></i>Broadcast Global Alert</span>
+      <button class="modal-close" onclick="closeModal('createAlertModal')"><i class="fas fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="field-row">
+        <div class="field-group">
+          <label class="field-label">Alert Type *</label>
+          <select class="field-select" id="caType">
+            <option value="Flood">🌊 Flood</option>
+            <option value="Earthquake">🌍 Earthquake</option>
+            <option value="Storm">🌀 Storm</option>
+            <option value="Wildfire">🔥 Wildfire</option>
+            <option value="General">⚠️ General Alert</option>
+          </select>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Severity *</label>
+          <select class="field-select" id="caSeverity">
+            <option value="low">Low</option>
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
+            <option value="critical">Critical</option>
+          </select>
+        </div>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Location *</label>
+        <input class="field-input" id="caLocation" type="text" placeholder="Region or City" />
+      </div>
+      <div class="field-group">
+        <label class="field-label">Message *</label>
+        <textarea class="field-textarea" id="caDescription" placeholder="Write the alert message for all users..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('createAlertModal')">Cancel</button>
+      <button class="btn btn-danger" onclick="submitGlobalAlert()"><i class="fas fa-paper-plane"></i> Broadcast Now</button>
     </div>
   </div>
 </div>

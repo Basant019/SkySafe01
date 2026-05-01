@@ -1,5 +1,6 @@
 const { pool } = require('../config/db');
 const { createAndSendNotification } = require('../services/notificationService');
+const { emitEvent } = require('../services/socketService');
 
 // POST /api/reports — User submits a disaster report
 const createReport = async (req, res) => {
@@ -61,6 +62,15 @@ const createReport = async (req, res) => {
             success: true,
             message: 'Disaster report submitted successfully',
             report_id: result.insertId
+        });
+
+        // Real-time notification for admins
+        emitEvent('new_report', { 
+            id: result.insertId, 
+            disaster_type, 
+            location, 
+            severity: normalizedSeverity,
+            created_at: new Date()
         });
 
     } catch (error) {
@@ -253,6 +263,14 @@ const broadcastReport = async (req, res) => {
         }
 
         res.status(200).json({ success: true, message: `Alert broadcasted to ${count} users successfully.` });
+
+        // Real-time broadcast for all users
+        emitEvent('broadcast_alert', {
+            title: `🚨 NEW DISASTER ALERT: ${report.disaster_type} in ${report.location}`,
+            description: report.description,
+            severity: report.severity,
+            location: report.location
+        });
 
     } catch (error) {
         console.error('Broadcast Report Error:', error);

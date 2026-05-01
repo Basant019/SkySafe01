@@ -1,4 +1,5 @@
 const { pool } = require('../config/db');
+const { emitEvent } = require('../services/socketService');
 
 // Create disaster alert (admin only)
 const createAlert = async (req, res) => {
@@ -52,6 +53,14 @@ const createAlert = async (req, res) => {
             success: true,
             message: 'Disaster alert created successfully',
             alert_id: result.insertId
+        });
+
+        // Real-time broadcast for all users
+        emitEvent('broadcast_alert', {
+            title: `📢 OFFICIAL ALERT: ${alert_type}`,
+            description: description,
+            severity: severity,
+            location: location
         });
 
     } catch (error) {

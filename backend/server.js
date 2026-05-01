@@ -85,8 +85,14 @@ app.use((err, req, res, next) => {
     });
 });
 
+// ── Socket.io Integration ────────────────────────────────
+const http = require('http');
+const server = http.createServer(app);
+const { initSocket } = require('./services/socketService');
+initSocket(server);
+
 // ── Start Server ──────────────────────────────────────────
-app.listen(PORT, () => {
+server.listen(PORT, () => {
     console.log(`\n🚀 SkySafe Server running on http://localhost:${PORT}`);
     console.log(`📋 API Endpoints:`);
     console.log(`   Auth:      http://localhost:${PORT}/api/auth`);
