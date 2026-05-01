@@ -85,7 +85,7 @@ async function fetchAndShowLiveAlerts() {
 // ═══════════════════════════════════════════════════════
 //  BOOT
 // ═══════════════════════════════════════════════════════
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     currentToken = localStorage.getItem('skysafe_token');
     currentUser  = JSON.parse(localStorage.getItem('skysafe_user') || 'null');
 
@@ -94,16 +94,17 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
-    // If admin tries to use user dashboard, redirect to admin dashboard
-    if (currentUser.role === 'admin') {
-        // Allow admin to view user dashboard too — just show admin controls
-    }
-
     initNavbar();
     fetchAndShowLiveAlerts();
 
-    if (currentUser.role === 'admin') renderAdminDashboard();
-    else renderUserDashboard();
+    try {
+        if (currentUser.role === 'admin') await renderAdminDashboard();
+        else await renderUserDashboard();
+    } catch (err) {
+        console.error('Dashboard Load Error:', err);
+        document.getElementById('contentArea').innerHTML = emptyState('fas fa-circle-exclamation', 'Something went wrong', 'We couldn\'t load your dashboard data. Please check your internet connection and try refreshing.');
+        toast('Error loading dashboard data. ⚠️', 'error');
+    }
 
     document.getElementById('logoutBtn').addEventListener('click', () => {
         localStorage.clear();
