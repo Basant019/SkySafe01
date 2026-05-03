@@ -2,7 +2,7 @@
   "name": "SkySafe Emergency System",
   "short_name": "SkySafe",
   "description": "Real-time disaster management and emergency broadcast system.",
-  "start_url": "/frontend/pages/dashboard.html",
+  "start_url": "/dashboard.html",
   "display": "standalone",
   "background_color": "#0a0e1a",
   "theme_color": "#00c8ff",
