@@ -39,11 +39,24 @@
     }
 
     // --- Emergency Siren Sound ---
+    let currentAlarm = null;
+    window.stopEmergencySiren = function() {
+        if (currentAlarm) {
+            currentAlarm.pause();
+            currentAlarm.currentTime = 0;
+            currentAlarm = null;
+        }
+    };
+
     function playEmergencySiren() {
         try {
-            const audio = new Audio('https://www.soundjay.com/mechanical/siren-1.mp3');
-            audio.volume = 0.5;
-            audio.play().catch(e => console.warn('🔊 Audio play blocked by browser. User must interact first.', e.message));
+            if (currentAlarm) {
+                window.stopEmergencySiren();
+            }
+            currentAlarm = new Audio('https://www.soundjay.com/mechanical/siren-1.mp3');
+            currentAlarm.volume = 0.8;
+            currentAlarm.loop = true;
+            currentAlarm.play().catch(e => console.warn('🔊 Audio play blocked by browser. User must interact first.', e.message));
         } catch (e) {
             console.warn('Could not play emergency siren:', e.message);
         }
@@ -95,7 +108,7 @@
             <a href="/dashboard.html" style="background:#ef4444; color:#fff; padding:8px 16px; border-radius:8px; font-size:12px; font-weight:700; text-decoration:none; white-space:nowrap; box-shadow:0 2px 10px rgba(239,68,68,0.5);">
                 View Dashboard
             </a>
-            <button onclick="document.getElementById('skysafe-broadcast-banner').remove()" 
+            <button onclick="document.getElementById('skysafe-broadcast-banner').remove(); if(window.stopEmergencySiren) window.stopEmergencySiren();" 
                 style="background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); color:#fff; width:28px; height:28px; border-radius:50%; cursor:pointer; font-size:16px; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
                 ×
             </button>
@@ -108,7 +121,10 @@
             if (document.getElementById('skysafe-broadcast-banner')) {
                 banner.style.transition = 'opacity 0.5s';
                 banner.style.opacity = '0';
-                setTimeout(() => banner.remove(), 500);
+                setTimeout(() => {
+                    banner.remove();
+                    if(window.stopEmergencySiren) window.stopEmergencySiren();
+                }, 500);
             }
         }, 30000);
     }

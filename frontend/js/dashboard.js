@@ -789,37 +789,9 @@ async function broadcastReport(id) {
     }
 }
 
-// Admin: One-Click Instant Emergency Broadcast (no form, no confirm)
-async function openCreateAlertModal() {
-    const btn = document.querySelector('[onclick="openCreateAlertModal()"]');
-    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Broadcasting...'; }
-
-    try {
-        const res = await authFetch(`${API}/disasters/alerts`, {
-            method: 'POST',
-            body: JSON.stringify({
-                alert_type: 'SYSTEM EMERGENCY',
-                severity: 'critical',
-                location: 'ALL AREAS',
-                description: '🚨 OFFICIAL EMERGENCY BROADCAST: A critical disaster condition has been detected. All SkySafe users are advised to stay alert, secure your surroundings, and check the map for active safe routes immediately.',
-                effective_date: new Date().toISOString(),
-                created_by: currentUser?.id || null
-            })
-        });
-
-        if (res.success) {
-            toast('📢 Emergency broadcast sent to ALL users instantly!', 'success');
-        } else {
-            toast(res.message || 'Broadcast failed. Try again.', 'error');
-        }
-    } catch {
-        toast('Network error — is the backend running?', 'error');
-    } finally {
-        if (btn) {
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-bullhorn"></i> Broadcast Global Alert';
-        }
-    }
+// Admin: Open Create Alert Modal
+function openCreateAlertModal() {
+    openModal('createAlertModal');
 }
 
 // Admin: Custom Alert Form submit (for "Create Alert" modal)
