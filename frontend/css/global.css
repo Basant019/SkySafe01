@@ -67,7 +67,7 @@
 }
 
 /* ── DARK MODE ── */
-[data-theme="dark"] {
+html[data-theme="dark"] {
   --bg-primary: #0f172a;
   --bg-secondary: #1a202c;
   --surface-primary: #1e293b;
