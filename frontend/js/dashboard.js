@@ -158,14 +158,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         window.location.href = 'login.html';
     });
     
-    // Request Push Notification permission if not already granted
-    if ('Notification' in window && Notification.permission === 'default') {
-        Notification.requestPermission().then(permission => {
-            if (permission === 'granted') {
-                toast('🔔 Push notifications enabled for emergency broadcasts.', 'success');
-            }
-        });
-    }
+
 });
 
 // ── REAL-TIME (SOCKET.IO) ──────────────────────────────────

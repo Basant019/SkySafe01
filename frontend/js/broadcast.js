@@ -133,13 +133,46 @@
         }
     }
 
-    // --- Request permission early (on page load) ---
-    if ('Notification' in window && Notification.permission === 'default') {
-        // Small delay so it doesn't pop up immediately on page load
-        setTimeout(() => {
-            Notification.requestPermission();
-        }, 3000);
+    // --- Request permission (must be user-triggered) ---
+    function askForNotificationPermission() {
+        if (!('Notification' in window)) return;
+        
+        if (Notification.permission === 'default') {
+            // Show a custom toast/banner to get a user click
+            const prompt = document.createElement('div');
+            prompt.id = 'skysafe-notif-prompt';
+            prompt.style.cssText = `
+                position: fixed; bottom: 20px; right: 20px; z-index: 999999;
+                background: #1e293b; color: #fff; padding: 16px 20px;
+                border-radius: 12px; border: 1px solid #334155;
+                box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+                font-family: Inter, sans-serif; display: flex; align-items: center; gap: 12px;
+                animation: skysafeBannerSlide 0.4s ease;
+            `;
+            prompt.innerHTML = `
+                <div style="font-size: 20px">🔔</div>
+                <div style="flex: 1">
+                    <div style="font-weight: 700; font-size: 14px">Enable Emergency Alerts?</div>
+                    <div style="font-size: 12px; color: #94a3b8">Get instant notifications for disasters.</div>
+                </div>
+                <button id="enableNotifBtn" style="background: #00c8ff; color: #fff; border: none; padding: 8px 14px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 12px">Enable</button>
+                <button onclick="this.parentElement.remove()" style="background: transparent; border: none; color: #64748b; cursor: pointer; font-size: 18px">×</button>
+            `;
+            document.body.appendChild(prompt);
+
+            document.getElementById('enableNotifBtn').onclick = () => {
+                Notification.requestPermission().then(permission => {
+                    if (permission === 'granted') {
+                        new Notification('✅ Alerts Enabled', { body: 'You will now receive emergency broadcasts.' });
+                    }
+                    prompt.remove();
+                });
+            };
+        }
     }
+
+    // Call it after a short delay
+    setTimeout(askForNotificationPermission, 2000);
 
     // Start everything
     loadSocketAndConnect();
