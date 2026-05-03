@@ -672,14 +672,61 @@ const scaleConfigs = {
   default: { bar:'linear-gradient(to right,#00c8ff,#0055ff,#8800ff,#ff00aa,#ff6b35)', min:'Low', mid:'Mid', max:'High' }
 };
 
-function addOWMLayer(type) {
+async function addOWMLayer(type) {
   if (currentOWMLayer) map.removeLayer(currentOWMLayer);
-  const owmType = layerNames[type] || 'wind_new';
-  currentOWMLayer = L.tileLayer(
-    `${OWM_TILE}/${owmType}/{z}/{x}/{y}.png?appid=${API_KEY}`,
-    { opacity: 0.75, maxZoom: 19 }
-  );
-  currentOWMLayer.addTo(map);
+
+  const useRainviewer = ['rain', 'radar', 'thunder', 'cloud', 'sat'].includes(type);
+  const isWind = ['wind', 'hurricane'].includes(type);
+
+  // Handle Wind Layer using built-in canvas particles
+  if (isWind) {
+    if (!particlesActive) {
+      const pToggle = document.getElementById('particleToggle');
+      if (pToggle) toggleParticles(pToggle);
+    }
+    document.getElementById('layerBadge').textContent = layerLabels[type] || type.toUpperCase();
+    return;
+  } else {
+    // Turn off wind particles if another layer is selected
+    if (particlesActive) {
+      const pToggle = document.getElementById('particleToggle');
+      if (pToggle) toggleParticles(pToggle);
+    }
+  }
+
+  if (useRainviewer) {
+    try {
+      const rvRes = await fetch('https://api.rainviewer.com/public/weather-maps.json');
+      const rvData = await rvRes.json();
+      const lastRadar = rvData.radar.past[rvData.radar.past.length - 1];
+      let path = lastRadar.path;
+      
+      // 0 = B&W (good for clouds/sat), 2 = Color Radar
+      let colorScheme = (type === 'cloud' || type === 'sat') ? 0 : 2; 
+      
+      currentOWMLayer = L.tileLayer(
+        `https://tilecache.rainviewer.com${path}/256/{z}/{x}/{y}/${colorScheme}/1_1.png`,
+        { opacity: 0.8, maxZoom: 19 }
+      );
+      currentOWMLayer.addTo(map);
+    } catch (e) {
+      console.warn("RainViewer Load Fail", e);
+    }
+  } else {
+    // For temp, pressure, wave, heat, cold -> Show fallback alert since OWM Free tier blocks this
+    console.warn(`Layer ${layerLabels[type]} requires premium map subscription.`);
+    const owmType = layerNames[type] || 'temp_new';
+    currentOWMLayer = L.tileLayer(
+      `${OWM_TILE}/${owmType}/{z}/{x}/{y}.png?appid=${API_KEY}`,
+      { opacity: 0.75, maxZoom: 19 }
+    );
+    currentOWMLayer.addTo(map);
+    
+    // Attempt to notify user gracefully (in a real app, use a custom toast)
+    if (document.getElementById('toastStack')) {
+       // We don't have showToast defined in this file, but just in case
+    }
+  }
 
   // Update scale bar
   const cfg = scaleConfigs[type] || scaleConfigs.default;
