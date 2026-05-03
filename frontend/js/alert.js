@@ -1497,17 +1497,27 @@ async function broadcastGlobalAlert(title, message, location) {
     const token = localStorage.getItem('skysafe_token');
     showToast('Broadcasting alert...', 'blue');
     
-    // Push the alert via the backend
-    const res = await fetch(`http://localhost:5000/api/notifications`, {
+    const isLocal = window.location.hostname === 'localhost' || 
+                    window.location.hostname === '127.0.0.1' || 
+                    window.location.hostname.startsWith('192.168.') ||
+                    window.location.hostname.startsWith('10.') ||
+                    window.location.hostname.startsWith('172.');
+    const API_BASE = isLocal ? `http://${window.location.hostname}:5000/api` : `https://${window.location.hostname}/api`;
+
+    // Push the alert via the backend disasters endpoint to trigger socket events globally
+    const res = await fetch(`${API_BASE}/disasters/alerts`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
           'Authorization': token ? `Bearer ${token}` : '' 
         },
         body: JSON.stringify({
-            user_id: currentUser.id, 
-            condition: "disaster",
-            location: location || 'Global'
+            alert_type: title,
+            severity: "critical",
+            location: location || "Global",
+            description: message,
+            effective_date: new Date().toISOString(),
+            created_by: currentUser.id
         })
     });
     
