@@ -4,7 +4,9 @@
  *          disaster reports, trip management
  */
 
-const API = `http://${window.location.hostname}:5000/api`;
+const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname.startsWith('192.168.');
+const API = isLocal ? `http://${window.location.hostname}:5000/api` : `https://${window.location.hostname}/api`;
+const SOCKET_URL = isLocal ? `http://${window.location.hostname}:5000` : `https://${window.location.hostname}`;
 
 // ═══════════════════════════════════════════════════════
 //  STATE
@@ -174,7 +176,7 @@ function initRealTime() {
         return;
     }
 
-    const socket = io(`http://${window.location.hostname}:5000`);
+    const socket = io(SOCKET_URL);
 
     // Listener for admins: New report received
     socket.on('new_report', (report) => {
