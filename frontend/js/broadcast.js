@@ -30,10 +30,22 @@
             socket.on('broadcast_alert', (alert) => {
                 showBroadcastBanner(alert);
                 triggerNativePush(alert);
+                playEmergencySiren();
             });
 
         } catch (e) {
             console.warn('SkySafe broadcast init failed:', e.message);
+        }
+    }
+
+    // --- Emergency Siren Sound ---
+    function playEmergencySiren() {
+        try {
+            const audio = new Audio('https://www.soundjay.com/mechanical/siren-1.mp3');
+            audio.volume = 0.5;
+            audio.play().catch(e => console.warn('🔊 Audio play blocked by browser. User must interact first.', e.message));
+        } catch (e) {
+            console.warn('Could not play emergency siren:', e.message);
         }
     }
 
@@ -119,9 +131,10 @@
             body: `${alert.description || 'Critical alert issued.'}\n📍 ${alert.location || 'All Areas'}`,
             icon: 'https://cdn-icons-png.flaticon.com/512/564/564619.png',
             requireInteraction: true,
-            vibrate: [300, 100, 300, 100, 300],
+            vibrate: [300, 100, 300, 100, 300, 100, 300],
             tag: 'skysafe-emergency',
-            data: { url: '/dashboard.html' }
+            data: { url: '/dashboard.html' },
+            sound: 'https://www.soundjay.com/mechanical/siren-1.mp3'
         };
 
         try {

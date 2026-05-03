@@ -184,27 +184,8 @@ function initRealTime() {
         }
     });
 
-    // Listener for all users: Admin broadcast
-    socket.on('broadcast_alert', (alert) => {
-        // Show an in-app toast
-        const alertMsg = `
-            <div style="font-weight:700; margin-bottom:4px">${alert.title}</div>
-            <div style="font-size:12px">${alert.description}</div>
-            <div style="font-size:11px; margin-top:4px; opacity:0.8"><i class="fas fa-location-dot"></i> ${alert.location}</div>
-        `;
-        toast(alertMsg, 'error');
-        
-        // TRIGGER NATIVE OS-LEVEL PUSH NOTIFICATION (Like a government emergency broadcast)
-        if ('Notification' in window && Notification.permission === 'granted') {
-            new Notification(alert.title || "🚨 EMERGENCY BROADCAST", {
-                body: alert.description || "A critical alert has been issued. Please check your dashboard.",
-                icon: 'https://cdn-icons-png.flaticon.com/512/564/564619.png',
-                vibrate: [200, 100, 200, 100, 200, 100, 200],
-                requireInteraction: true // Keeps the notification open until the user dismisses it
-            });
-        }
-        
-        // Also refresh live alerts list if it exists
+    // Also refresh live alerts list if it exists
+    socket.on('broadcast_alert', () => {
         fetchAndShowLiveAlerts();
     });
 

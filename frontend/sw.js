@@ -44,7 +44,8 @@ self.addEventListener('push', event => {
     icon: 'https://cdn-icons-png.flaticon.com/512/564/564619.png',
     vibrate: [200, 100, 200, 100, 200, 100, 200],
     requireInteraction: true,
-    data: { url: '/dashboard.html' }
+    data: { url: '/dashboard.html' },
+    sound: 'https://www.soundjay.com/mechanical/siren-1.mp3'
   };
 
   event.waitUntil(
