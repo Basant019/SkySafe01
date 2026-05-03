@@ -2,7 +2,11 @@
     if (window.SkySafeBroadcastInitialized) return;
     window.SkySafeBroadcastInitialized = true;
 
-    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname.startsWith('192.168.');
+    const isLocal = window.location.hostname === 'localhost' || 
+                    window.location.hostname === '127.0.0.1' || 
+                    window.location.hostname.startsWith('192.168.') ||
+                    window.location.hostname.startsWith('10.') ||
+                    window.location.hostname.startsWith('172.');
     const SKYSAFE_API = isLocal ? `http://${window.location.hostname}:5000` : `https://${window.location.hostname}`;
     // --- Inject socket.io script dynamically if not already loaded ---
     function loadSocketAndConnect() {

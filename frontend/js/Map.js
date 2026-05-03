@@ -159,7 +159,11 @@ async function loadMapDisasterData() {
     
     // ADD: Fetch our own backend disasters
     try {
-      const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname.startsWith('192.168.');
+      const isLocal = window.location.hostname === 'localhost' || 
+                      window.location.hostname === '127.0.0.1' || 
+                      window.location.hostname.startsWith('192.168.') ||
+                      window.location.hostname.startsWith('10.') ||
+                      window.location.hostname.startsWith('172.');
       const API_ROOT = isLocal ? `http://${window.location.hostname}:5000` : `https://${window.location.hostname}`;
       const dbRes = await fetch(`${API_ROOT}/api/disasters?active=true`);
       if (dbRes.ok) {
