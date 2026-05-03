@@ -675,8 +675,9 @@ const scaleConfigs = {
 async function addOWMLayer(type) {
   if (currentOWMLayer) map.removeLayer(currentOWMLayer);
 
-  const useRainviewer = ['rain', 'radar', 'thunder', 'cloud', 'sat'].includes(type);
   const isWind = ['wind', 'hurricane'].includes(type);
+  const isCloudSat = ['cloud', 'sat'].includes(type);
+  const isRadar = ['rain', 'radar', 'thunder'].includes(type);
 
   // Handle Wind Layer using built-in canvas particles
   if (isWind) {
@@ -694,24 +695,32 @@ async function addOWMLayer(type) {
     }
   }
 
-  if (useRainviewer) {
+  if (isRadar) {
     try {
       const rvRes = await fetch('https://api.rainviewer.com/public/weather-maps.json');
       const rvData = await rvRes.json();
       const lastRadar = rvData.radar.past[rvData.radar.past.length - 1];
       let path = lastRadar.path;
       
-      // 0 = B&W (good for clouds/sat), 2 = Color Radar
-      let colorScheme = (type === 'cloud' || type === 'sat') ? 0 : 2; 
-      
+      // 2 = Color Radar
       currentOWMLayer = L.tileLayer(
-        `https://tilecache.rainviewer.com${path}/256/{z}/{x}/{y}/${colorScheme}/1_1.png`,
+        `https://tilecache.rainviewer.com${path}/256/{z}/{x}/{y}/2/1_1.png`,
         { opacity: 0.8, maxZoom: 19 }
       );
       currentOWMLayer.addTo(map);
     } catch (e) {
       console.warn("RainViewer Load Fail", e);
     }
+  } else if (isCloudSat) {
+    // Use Iowa Environmental Mesonet (IEM) Global GOES Infrared for clouds/satellite
+    currentOWMLayer = L.tileLayer.wms("https://mesonet.agron.iastate.edu/cgi-bin/wms/goes/global.cgi?", {
+        layers: 'goes_global_ir',
+        format: 'image/png',
+        transparent: true,
+        opacity: 0.65,
+        attribution: "Weather data © IEM"
+    });
+    currentOWMLayer.addTo(map);
   } else {
     // For temp, pressure, wave, heat, cold -> Show fallback alert since OWM Free tier blocks this
     console.warn(`Layer ${layerLabels[type]} requires premium map subscription.`);
@@ -721,11 +730,6 @@ async function addOWMLayer(type) {
       { opacity: 0.75, maxZoom: 19 }
     );
     currentOWMLayer.addTo(map);
-    
-    // Attempt to notify user gracefully (in a real app, use a custom toast)
-    if (document.getElementById('toastStack')) {
-       // We don't have showToast defined in this file, but just in case
-    }
   }
 
   // Update scale bar
