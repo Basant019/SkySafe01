@@ -1,9 +1,16 @@
 const CACHE_NAME = 'skysafe-v2';
 const ASSETS = [
-  '/dashboard.html',
+  '/pages/dashboard.html',
+  '/pages/login.html',
+  '/pages/register.html',
+  '/pages/alert.html',
+  '/pages/forecast.html',
+  '/pages/Map.html',
+  '/pages/trip.html',
   '/css/global.css',
   '/js/broadcast.js',
-  '/js/dashboard.js'
+  '/js/dashboard.js',
+  '/js/auth.js'
 ];
 
 // Install Service Worker

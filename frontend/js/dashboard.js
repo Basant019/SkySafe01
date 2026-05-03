@@ -4,7 +4,11 @@
  *          disaster reports, trip management
  */
 
-const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname.startsWith('192.168.');
+const isLocal = window.location.hostname === 'localhost' || 
+                window.location.hostname === '127.0.0.1' || 
+                window.location.hostname.startsWith('192.168.') ||
+                window.location.hostname.startsWith('10.') ||
+                window.location.hostname.startsWith('172.');
 const API = isLocal ? `http://${window.location.hostname}:5000/api` : `https://${window.location.hostname}/api`;
 const SOCKET_URL = isLocal ? `http://${window.location.hostname}:5000` : `https://${window.location.hostname}`;
 
@@ -136,7 +140,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     currentUser  = JSON.parse(localStorage.getItem('skysafe_user') || 'null');
 
     if (!currentToken || !currentUser) {
-        window.location.href = 'login.html';
+        window.location.href = '/login.html';
         return;
     }
 
@@ -155,7 +159,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     document.getElementById('logoutBtn').addEventListener('click', () => {
         localStorage.clear();
-        window.location.href = 'login.html';
+        window.location.href = '/login.html';
     });
     
 

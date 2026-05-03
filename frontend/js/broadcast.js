@@ -80,7 +80,7 @@
                     <span style="color:#fca5a5; margin-left:8px;">📍 ${alert.location || 'All Areas'}</span>
                 </div>
             </div>
-            <a href="dashboard.html" style="background:#ef4444; color:#fff; padding:8px 16px; border-radius:8px; font-size:12px; font-weight:700; text-decoration:none; white-space:nowrap; box-shadow:0 2px 10px rgba(239,68,68,0.5);">
+            <a href="/dashboard.html" style="background:#ef4444; color:#fff; padding:8px 16px; border-radius:8px; font-size:12px; font-weight:700; text-decoration:none; white-space:nowrap; box-shadow:0 2px 10px rgba(239,68,68,0.5);">
                 View Dashboard
             </a>
             <button onclick="document.getElementById('skysafe-broadcast-banner').remove()" 
@@ -121,7 +121,7 @@
             requireInteraction: true,
             vibrate: [300, 100, 300, 100, 300],
             tag: 'skysafe-emergency',
-            data: { url: 'dashboard.html' }
+            data: { url: '/dashboard.html' }
         };
 
         try {
@@ -135,7 +135,7 @@
                 const n = new Notification(alert.title || '🚨 EMERGENCY BROADCAST', options);
                 n.onclick = () => {
                     window.focus();
-                    window.location.href = 'dashboard.html';
+                    window.location.href = '/dashboard.html';
                 };
             }
         } catch (e) {
@@ -187,7 +187,7 @@
     // --- Service Worker Registration (for PWA / Home Screen) ---
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-            navigator.serviceWorker.register('/frontend/sw.js')
+            navigator.serviceWorker.register('/sw.js')
                 .then(reg => console.log('🚀 SkySafe: Service Worker active'))
                 .catch(err => console.warn('Service Worker failed:', err));
         });

@@ -1,8 +1,9 @@
 {
-  "name": "SkySafe Emergency System",
+  "name": "SkySafe Emergency Platform",
   "short_name": "SkySafe",
-  "description": "Real-time disaster management and emergency broadcast system.",
+  "description": "AI-powered disaster management and emergency platform.",
   "start_url": "/dashboard.html",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#0a0e1a",
   "theme_color": "#00c8ff",

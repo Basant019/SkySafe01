@@ -5,7 +5,12 @@
  * API Base URL: http://localhost:5000/api
  */
 
-const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname.startsWith('192.168.');
+const isLocal = window.location.hostname === 'localhost' || 
+                window.location.hostname === '127.0.0.1' || 
+                window.location.hostname.startsWith('192.168.') ||
+                window.location.hostname.startsWith('10.') ||
+                window.location.hostname.startsWith('172.');
+
 const API_BASE_URL = isLocal ? `http://${window.location.hostname}:5000/api` : `https://${window.location.hostname}/api`;
 
 // ==================== UTILITY FUNCTIONS ====================
@@ -175,7 +180,7 @@ function isLoggedIn() {
     return !!token && !!user;
 }
 
-function logout(redirectUrl = 'login.html') {
+function logout(redirectUrl = '/login.html') {
     localStorage.removeItem('skysafe_user');
     localStorage.removeItem('skysafe_token');
     localStorage.removeItem('skysafe_logged_in');
@@ -183,7 +188,7 @@ function logout(redirectUrl = 'login.html') {
     window.location.href = redirectUrl;
 }
 
-function requireAuth(loginPage = 'login.html') {
+function requireAuth(loginPage = '/login.html') {
     if (!isLoggedIn()) {
         window.location.href = loginPage;
         return false;
@@ -191,7 +196,7 @@ function requireAuth(loginPage = 'login.html') {
     return true;
 }
 
-function redirectIfAuth(dashboardPage = 'dashboard.html') {
+function redirectIfAuth(dashboardPage = '/dashboard.html') {
     if (isLoggedIn()) {
         window.location.href = dashboardPage;
         return true;
@@ -269,9 +274,9 @@ function initRegistrationPage() {
             saveUserSession(result.user, result.token);
             setTimeout(() => {
                 if (result.user && result.user.role === 'admin') {
-                    window.location.href = 'dashboard.html';
+                    window.location.href = '/dashboard.html';
                 } else {
-                    window.location.href = 'forecast.html';
+                    window.location.href = '/forecast.html';
                 }
             }, 1500);
         } else {
@@ -332,9 +337,9 @@ function initLoginPage() {
             saveUserSession(result.user, result.token);
             setTimeout(() => {
                 if (result.user && result.user.role === 'admin') {
-                    window.location.href = 'dashboard.html';
+                    window.location.href = '/dashboard.html';
                 } else {
-                    window.location.href = 'dashboard.html';
+                    window.location.href = '/dashboard.html';
                 }
             }, 1000);
         } else {
@@ -361,14 +366,14 @@ function initSkySafeAuth() {
     if (hasFname && hasConfirmPassword) {
         console.log('Detected: Registration Page');
         if (isLoggedIn()) {
-            window.location.href = 'dashboard.html';
+            window.location.href = '/dashboard.html';
             return;
         }
         initRegistrationPage();
     } else if (hasEmailField && !hasFname) {
         console.log('Detected: Login Page');
         if (isLoggedIn()) {
-            window.location.href = 'dashboard.html';
+            window.location.href = '/dashboard.html';
             return;
         }
         initLoginPage();

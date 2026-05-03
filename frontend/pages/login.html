@@ -9,9 +9,16 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
   <link rel="stylesheet" href="/css/global.css" />
   <link rel="stylesheet" href="/css/auth.css" />
+  <script>
+    // Immediate theme init to prevent flash
+    (function() {
+      const savedTheme = localStorage.getItem('skysafe-theme') || 'light';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+    })();
+  </script>
   <style>
     /* Login-specific overrides */
-    .login-card { max-width: 920px; min-height: 560px; margin: 20px; }
+    .login-card { max-width: 920px; min-height: 560px; margin: 20px; background: var(--bg-card); }
     .left-panel { width: 360px; min-width: 280px; }
 
     .tab-switcher {
@@ -41,7 +48,9 @@
       background: linear-gradient(135deg, var(--primary), #2563EB);
       box-shadow: 0 4px 12px var(--primary-glow);
     }
-    .tab-btn:not(.active):hover { color: var(--text-primary); background: var(--glass); }
+    .tab-btn:not(.active):hover { color: var(--text-primary); background: var(--surface-secondary); }
+    .tab-btn { color: var(--text-secondary); }
+    [data-theme="dark"] .tab-btn:not(.active) { color: var(--text-tertiary); }
 
     .field-wrap { margin-bottom: 18px; }
     .panel-title {
@@ -146,32 +155,30 @@
         <div class="brand-text">SKY<span>SAFE</span></div>
       </div>
 
-      <div>
-        <div class="globe-wrap">
-          <div class="globe-glow"></div>
-          <div class="globe-ring rg1"></div>
-          <div class="globe-ring rg2"></div>
-          <div class="globe">
-            <div class="globe-grid"></div>
-            <div class="radar-sweep-globe"></div>
-            <div class="globe-dot gd1"></div>
-            <div class="globe-dot gd2"></div>
-            <div class="globe-dot gd3"></div>
-          </div>
+      <div class="globe-wrap">
+        <div class="globe-glow"></div>
+        <div class="globe-ring rg1"></div>
+        <div class="globe-ring rg2"></div>
+        <div class="globe">
+          <div class="globe-grid"></div>
+          <div class="radar-sweep-globe"></div>
+          <div class="globe-dot gd1"></div>
+          <div class="globe-dot gd2"></div>
+          <div class="globe-dot gd3"></div>
         </div>
-
-        <div class="left-tagline">
-          <h2>Welcome to SkySafe</h2>
-          <p>Your intelligent weather, disaster alert & AI-powered trip planning platform.</p>
-        </div>
-
-        <ul class="benefits-list">
-          <li><i class="fas fa-check-circle"></i> Live weather & disaster alerts</li>
-          <li><i class="fas fa-check-circle"></i> Smart AI trip planner</li>
-          <li><i class="fas fa-check-circle"></i> Disaster-aware routing</li>
-          <li><i class="fas fa-check-circle"></i> Real-time safety notifications</li>
-        </ul>
       </div>
+
+      <div class="left-tagline">
+        <h2>Welcome to SkySafe</h2>
+        <p>Your intelligent weather, disaster alert & AI-powered trip planning platform.</p>
+      </div>
+
+      <ul class="benefits-list">
+        <li><i class="fas fa-check-circle"></i> Live weather & disaster alerts</li>
+        <li><i class="fas fa-check-circle"></i> Smart AI trip planner</li>
+        <li><i class="fas fa-check-circle"></i> Disaster-aware routing</li>
+        <li><i class="fas fa-check-circle"></i> Real-time safety notifications</li>
+      </ul>
     </div>
 
     <!-- ── RIGHT PANEL ── -->
@@ -357,9 +364,9 @@
         // Redirect based on role
         setTimeout(() => {
           if (data.user.role === 'admin') {
-            window.location.href = 'dashboard.html';
+            window.location.href = '/dashboard.html';
           } else {
-            window.location.href = 'dashboard.html';
+            window.location.href = '/dashboard.html';
           }
         }, 900);
 
@@ -382,7 +389,7 @@
         const userStr = localStorage.getItem('skysafe_user');
         const user  = userStr ? JSON.parse(userStr) : null;
         if (token && user) {
-          window.location.href = 'dashboard.html';
+          window.location.href = '/dashboard.html';
         }
       } catch (err) {
         localStorage.removeItem('skysafe_token');

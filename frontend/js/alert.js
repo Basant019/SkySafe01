@@ -317,7 +317,11 @@ function updateStatsFromNASA() {
 
 async function fetchCommunityStats() {
   try {
-    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname.startsWith('192.168.');
+    const isLocal = window.location.hostname === 'localhost' || 
+                    window.location.hostname === '127.0.0.1' || 
+                    window.location.hostname.startsWith('192.168.') ||
+                    window.location.hostname.startsWith('10.') ||
+                    window.location.hostname.startsWith('172.');
     const API_BASE = isLocal ? `http://${window.location.hostname}:5000/api` : `https://${window.location.hostname}/api`;
     const [repRes, alrRes] = await Promise.all([
       fetch(`${API_BASE}/reports`),
