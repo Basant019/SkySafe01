@@ -38,27 +38,64 @@
         }
     }
 
-    // --- Emergency Siren Sound ---
-    let currentAlarm = null;
+    // --- Emergency Siren Sound (Web Audio API) ---
+    let audioCtx = null;
+    let sirenOsc = null;
+    let sirenGain = null;
+    let sirenInterval = null;
+
     window.stopEmergencySiren = function() {
-        if (currentAlarm) {
-            currentAlarm.pause();
-            currentAlarm.currentTime = 0;
-            currentAlarm = null;
+        if (sirenOsc) {
+            try { sirenOsc.stop(); sirenOsc.disconnect(); } catch(e){}
+            sirenOsc = null;
+        }
+        if (sirenInterval) {
+            clearInterval(sirenInterval);
+            sirenInterval = null;
+        }
+        if (audioCtx) {
+            try { audioCtx.close(); } catch(e){}
+            audioCtx = null;
         }
     };
 
     function playEmergencySiren() {
         try {
-            if (currentAlarm) {
-                window.stopEmergencySiren();
+            window.stopEmergencySiren();
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            if (!AudioContext) return;
+
+            audioCtx = new AudioContext();
+            sirenOsc = audioCtx.createOscillator();
+            sirenGain = audioCtx.createGain();
+
+            sirenOsc.type = 'square';
+            sirenOsc.frequency.value = 750; // High pitch
+
+            sirenGain.gain.value = 0.1; // Moderate volume
+
+            sirenOsc.connect(sirenGain);
+            sirenGain.connect(audioCtx.destination);
+            sirenOsc.start();
+
+            let isHigh = true;
+            sirenInterval = setInterval(() => {
+                if (audioCtx && sirenOsc && audioCtx.state === 'running') {
+                    sirenOsc.frequency.setValueAtTime(isHigh ? 600 : 750, audioCtx.currentTime);
+                    isHigh = !isHigh;
+                }
+            }, 400);
+
+            // Handle browser autoplay policy
+            if (audioCtx.state === 'suspended') {
+                const resumeAudio = () => {
+                    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+                    document.removeEventListener('click', resumeAudio);
+                };
+                document.addEventListener('click', resumeAudio);
             }
-            currentAlarm = new Audio('https://www.soundjay.com/mechanical/siren-1.mp3');
-            currentAlarm.volume = 0.8;
-            currentAlarm.loop = true;
-            currentAlarm.play().catch(e => console.warn('🔊 Audio play blocked by browser. User must interact first.', e.message));
         } catch (e) {
-            console.warn('Could not play emergency siren:', e.message);
+            console.warn('Could not play siren:', e.message);
         }
     }
 
