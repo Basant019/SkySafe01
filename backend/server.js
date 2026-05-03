@@ -30,7 +30,6 @@ app.use(express.urlencoded({ extended: true }));
 
 // ── Serve Frontend Static Files ───────────────────────────
 app.use(express.static(path.join(__dirname, '..', 'frontend')));
-app.use(express.static(path.join(__dirname, '..', 'frontend', 'pages')));
 
 // ── Test DB connection ────────────────────────────────────
 testConnection();

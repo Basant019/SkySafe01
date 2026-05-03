@@ -1,16 +1,16 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head>
-  <link rel='manifest' href='../manifest.json'>
+  <link rel='manifest' href='/manifest.json'>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>SkySafe — 7-Day Forecast</title>
   <meta name="description" content="Check the 7-day weather forecast for any city. Real-time data powered by SkySafe."/>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
-  <link rel="stylesheet" href="../css/global.css"/>
-  <link rel="stylesheet" href="../css/forecast.css"/>
-  <script src="../js/theme.js"></script>
-  <script src="../js/auth.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5/css/all.min.css"/>
+  <link rel="stylesheet" href="/css/global.css"/>
+  <link rel="stylesheet" href="/css/forecast.css"/>
+  <script src="/js/theme.js"></script>
+  <script src="/js/auth.js"></script>
 <script>
     // Protect page - redirect if not logged in
     if (!(window.SkySafeAuth && typeof SkySafeAuth.isLoggedIn === 'function' && SkySafeAuth.isLoggedIn())) {
@@ -591,6 +591,6 @@ function fixForecastLayout() {
 }
 fixForecastLayout();
 </script>
-<script src="../js/broadcast.js"></script>
+<script src="/js/broadcast.js"></script>
 </body>
 </html>
