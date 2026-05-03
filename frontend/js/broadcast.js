@@ -115,19 +115,29 @@
     }
 
     function sendPush(alert) {
+        const options = {
+            body: `${alert.description || 'Critical alert issued.'}\n📍 ${alert.location || 'All Areas'}`,
+            icon: 'https://cdn-icons-png.flaticon.com/512/564/564619.png',
+            requireInteraction: true,
+            vibrate: [300, 100, 300, 100, 300],
+            tag: 'skysafe-emergency',
+            data: { url: 'dashboard.html' }
+        };
+
         try {
-            const n = new Notification(alert.title || '🚨 EMERGENCY BROADCAST', {
-                body: `${alert.description || 'Critical alert issued.'}\n📍 ${alert.location || 'All Areas'}`,
-                icon: 'https://cdn-icons-png.flaticon.com/512/564/564619.png',
-                requireInteraction: true,  // stays until user dismisses
-                vibrate: [300, 100, 300, 100, 300],
-                tag: 'skysafe-emergency',  // prevents duplicate stacking
-            });
-            // Click on notification → open dashboard
-            n.onclick = () => {
-                window.focus();
-                window.location.href = 'dashboard.html';
-            };
+            // Use Service Worker if available (better for Home Screen/PWA)
+            if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+                navigator.serviceWorker.ready.then(reg => {
+                    reg.showNotification(alert.title || '🚨 EMERGENCY BROADCAST', options);
+                });
+            } else {
+                // Fallback for desktop/standard browser
+                const n = new Notification(alert.title || '🚨 EMERGENCY BROADCAST', options);
+                n.onclick = () => {
+                    window.focus();
+                    window.location.href = 'dashboard.html';
+                };
+            }
         } catch (e) {
             console.warn('Push notification failed:', e.message);
         }
@@ -173,6 +183,15 @@
 
     // Call it after a short delay
     setTimeout(askForNotificationPermission, 2000);
+
+    // --- Service Worker Registration (for PWA / Home Screen) ---
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/frontend/sw.js')
+                .then(reg => console.log('🚀 SkySafe: Service Worker active'))
+                .catch(err => console.warn('Service Worker failed:', err));
+        });
+    }
 
     // Start everything
     loadSocketAndConnect();

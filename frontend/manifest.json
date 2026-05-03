@@ -1,0 +1,17 @@
+{
+  "name": "SkySafe Emergency System",
+  "short_name": "SkySafe",
+  "description": "Real-time disaster management and emergency broadcast system.",
+  "start_url": "/frontend/pages/dashboard.html",
+  "display": "standalone",
+  "background_color": "#0a0e1a",
+  "theme_color": "#00c8ff",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/564/564619.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
