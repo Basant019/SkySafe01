@@ -38,64 +38,41 @@
         }
     }
 
-    // --- Emergency Siren Sound (Web Audio API) ---
-    let audioCtx = null;
-    let sirenOsc = null;
-    let sirenGain = null;
-    let sirenInterval = null;
-
+    // --- Emergency Beep Sound ---
+    let currentAlarm = null;
     window.stopEmergencySiren = function() {
-        if (sirenOsc) {
-            try { sirenOsc.stop(); sirenOsc.disconnect(); } catch(e){}
-            sirenOsc = null;
-        }
-        if (sirenInterval) {
-            clearInterval(sirenInterval);
-            sirenInterval = null;
-        }
-        if (audioCtx) {
-            try { audioCtx.close(); } catch(e){}
-            audioCtx = null;
+        if (currentAlarm) {
+            currentAlarm.pause();
+            currentAlarm.currentTime = 0;
+            currentAlarm = null;
         }
     };
 
     function playEmergencySiren() {
         try {
-            window.stopEmergencySiren();
-            const AudioContext = window.AudioContext || window.webkitAudioContext;
-            if (!AudioContext) return;
-
-            audioCtx = new AudioContext();
-            sirenOsc = audioCtx.createOscillator();
-            sirenGain = audioCtx.createGain();
-
-            sirenOsc.type = 'square';
-            sirenOsc.frequency.value = 750; // High pitch
-
-            sirenGain.gain.value = 0.1; // Moderate volume
-
-            sirenOsc.connect(sirenGain);
-            sirenGain.connect(audioCtx.destination);
-            sirenOsc.start();
-
-            let isHigh = true;
-            sirenInterval = setInterval(() => {
-                if (audioCtx && sirenOsc && audioCtx.state === 'running') {
-                    sirenOsc.frequency.setValueAtTime(isHigh ? 600 : 750, audioCtx.currentTime);
-                    isHigh = !isHigh;
-                }
-            }, 400);
-
-            // Handle browser autoplay policy
-            if (audioCtx.state === 'suspended') {
-                const resumeAudio = () => {
-                    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-                    document.removeEventListener('click', resumeAudio);
-                };
-                document.addEventListener('click', resumeAudio);
+            if (currentAlarm) {
+                window.stopEmergencySiren();
+            }
+            // A small, offline-compatible base64-encoded beep sound (no CORS or network issues)
+            const beepBase64 = "data:audio/wav;base64,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";
+            
+            currentAlarm = new Audio(beepBase64);
+            currentAlarm.volume = 0.8;
+            currentAlarm.loop = true;
+            
+            const playPromise = currentAlarm.play();
+            if (playPromise !== undefined) {
+                playPromise.catch(e => {
+                    console.warn('🔊 Beep play blocked by browser. User must interact first.', e.message);
+                    const resumeAudio = () => {
+                        if (currentAlarm) currentAlarm.play();
+                        document.removeEventListener('click', resumeAudio);
+                    };
+                    document.addEventListener('click', resumeAudio);
+                });
             }
         } catch (e) {
-            console.warn('Could not play siren:', e.message);
+            console.warn('Could not play emergency beep:', e.message);
         }
     }
 
