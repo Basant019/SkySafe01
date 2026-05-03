@@ -1,5 +1,5 @@
 // frontend/js/trip.js
-const API_BASE_URL = 'https://skysafe01.onrender.com/api';
+const API_BASE_URL = 'http://localhost:5000/api';
 
 let map = null;
 let markersLayer = null;

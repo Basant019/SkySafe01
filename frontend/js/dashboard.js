@@ -4,7 +4,7 @@
  *          disaster reports, trip management
  */
 
-const API = 'https://skysafe01.onrender.com/api';
+const API = `http://${window.location.hostname}:5000/api`;
 
 // ═══════════════════════════════════════════════════════
 //  STATE
@@ -87,6 +87,11 @@ async function fetchAndShowLiveAlerts() {
             </div>
             ${alerts.length > 1 ? `<span style="color:${color}; font-size:12px; font-weight:600">+${alerts.length-1} more alerts</span>` : ''}
             <a href="alert.html" style="background:${color}; color:#fff; padding:6px 12px; border-radius:6px; font-size:12px; font-weight:700; text-decoration:none;">View All</a>
+            ${currentUser?.role === 'admin' ? `
+                <button onclick="deleteLiveAlert(${top.id})" style="background:#ef4444; color:#fff; border:none; padding:6px 12px; border-radius:6px; font-size:12px; font-weight:700; cursor:pointer;">
+                    <i class="fas fa-trash-can"></i> Delete
+                </button>
+            ` : ''}
             <button onclick="document.getElementById('liveAlertBanner').remove()" style="background:none; border:none; color:#94a3b8; font-size:18px; cursor:pointer; line-height:1">×</button>
         `;
         document.body.insertBefore(banner, document.body.firstChild);
@@ -95,6 +100,29 @@ async function fetchAndShowLiveAlerts() {
         if (navbar) navbar.style.marginTop = '50px';
     } catch (e) {
         console.warn('Could not fetch live alerts:', e.message);
+    }
+}
+
+async function deleteLiveAlert(id) {
+    if (!confirm('🚨 Are you sure you want to PERMANENTLY DELETE this broadcast for all users?')) return;
+    
+    try {
+        const res = await authFetch(`${API}/disasters/alerts/${id}/status`, {
+            method: 'PUT',
+            body: JSON.stringify({ is_active: false })
+        });
+        
+        if (res.success) {
+            toast('Broadcast deleted successfully!', 'success');
+            const banner = document.getElementById('liveAlertBanner');
+            if (banner) banner.remove();
+            const navbar = document.querySelector('.navbar') || document.querySelector('nav');
+            if (navbar) navbar.style.marginTop = '0';
+        } else {
+            toast(res.message || 'Failed to delete', 'error');
+        }
+    } catch {
+        toast('Network error', 'error');
     }
 }
 
@@ -127,16 +155,26 @@ document.addEventListener('DOMContentLoaded', async () => {
         localStorage.clear();
         window.location.href = 'login.html';
     });
+    
+    // Request Push Notification permission if not already granted
+    if ('Notification' in window && Notification.permission === 'default') {
+        Notification.requestPermission().then(permission => {
+            if (permission === 'granted') {
+                toast('🔔 Push notifications enabled for emergency broadcasts.', 'success');
+            }
+        });
+    }
 });
 
 // ── REAL-TIME (SOCKET.IO) ──────────────────────────────────
 function initRealTime() {
     if (typeof io === 'undefined') {
-        console.warn('Socket.io client not loaded.');
+        console.warn('Socket.io client not loaded yet. Retrying in 1s...');
+        setTimeout(initRealTime, 1000);
         return;
     }
 
-    const socket = io();
+    const socket = io(`http://${window.location.hostname}:5000`);
 
     // Listener for admins: New report received
     socket.on('new_report', (report) => {
@@ -149,13 +187,23 @@ function initRealTime() {
 
     // Listener for all users: Admin broadcast
     socket.on('broadcast_alert', (alert) => {
-        // Show a more prominent notification
+        // Show an in-app toast
         const alertMsg = `
             <div style="font-weight:700; margin-bottom:4px">${alert.title}</div>
             <div style="font-size:12px">${alert.description}</div>
             <div style="font-size:11px; margin-top:4px; opacity:0.8"><i class="fas fa-location-dot"></i> ${alert.location}</div>
         `;
         toast(alertMsg, 'error');
+        
+        // TRIGGER NATIVE OS-LEVEL PUSH NOTIFICATION (Like a government emergency broadcast)
+        if ('Notification' in window && Notification.permission === 'granted') {
+            new Notification(alert.title || "🚨 EMERGENCY BROADCAST", {
+                body: alert.description || "A critical alert has been issued. Please check your dashboard.",
+                icon: 'https://cdn-icons-png.flaticon.com/512/564/564619.png',
+                vibrate: [200, 100, 200, 100, 200, 100, 200],
+                requireInteraction: true // Keeps the notification open until the user dismisses it
+            });
+        }
         
         // Also refresh live alerts list if it exists
         fetchAndShowLiveAlerts();
@@ -761,50 +809,66 @@ async function broadcastReport(id) {
     }
 }
 
-// Admin: One-Click Push Notification
+// Admin: One-Click Instant Emergency Broadcast (no form, no confirm)
 async function openCreateAlertModal() {
-    // Reusing the same function name so the HTML button still works without edits
-    const isConfirmed = confirm("🚨 Are you sure you want to trigger a Global Emergency Broadcast to all users?");
-    if (!isConfirmed) return;
-
-    // Use a cool loading toast
-    toast('Initiating global broadcast...', 'success');
+    const btn = document.querySelector('[onclick="openCreateAlertModal()"]');
+    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Broadcasting...'; }
 
     try {
-        const payload = {
-            alert_type: "SYSTEM EMERGENCY",
-            severity: "critical",
-            location: "GLOBAL",
-            description: "Critical weather or disaster condition detected. Please secure your surroundings and check the map for active safe routes immediately.",
-            effective_date: new Date().toISOString()
-        };
-        
-        // Save the alert
         const res = await authFetch(`${API}/disasters/alerts`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
+            body: JSON.stringify({
+                alert_type: 'SYSTEM EMERGENCY',
+                severity: 'critical',
+                location: 'ALL AREAS',
+                description: '🚨 OFFICIAL EMERGENCY BROADCAST: A critical disaster condition has been detected. All SkySafe users are advised to stay alert, secure your surroundings, and check the map for active safe routes immediately.',
+                effective_date: new Date().toISOString(),
+                created_by: currentUser?.id || null
+            })
         });
-        
+
         if (res.success) {
-            // Trigger the Push Notification
-            await authFetch(`${API}/notifications`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    user_id: 1, // trigger smart broadcast
-                    condition: "disaster",
-                    location: "Global System"
-                })
-            });
-            toast('📢 Push Notification Broadcasted Successfully!', 'success');
+            toast('📢 Emergency broadcast sent to ALL users instantly!', 'success');
         } else {
-            toast(res.message || 'Failed to create broadcast', 'error');
+            toast(res.message || 'Broadcast failed. Try again.', 'error');
         }
     } catch {
-        toast('Network error while broadcasting', 'error');
+        toast('Network error — is the backend running?', 'error');
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-bullhorn"></i> Broadcast Global Alert';
+        }
     }
 }
+
+// Admin: Custom Alert Form submit (for "Create Alert" modal)
+async function submitGlobalAlert() {
+    const type = document.getElementById('caType')?.value || 'General';
+    const sev  = document.getElementById('caSeverity')?.value || 'critical';
+    const loc  = document.getElementById('caLocation')?.value.trim();
+    const desc = document.getElementById('caDescription')?.value.trim();
+
+    if (!loc || !desc) { toast('Please fill in location and message.', 'error'); return; }
+
+    try {
+        const res = await authFetch(`${API}/disasters/alerts`, {
+            method: 'POST',
+            body: JSON.stringify({
+                alert_type: type, severity: sev, location: loc,
+                description: desc, effective_date: new Date().toISOString(),
+                created_by: currentUser?.id || null
+            })
+        });
+        if (res.success) {
+            closeModal('createAlertModal');
+            toast('📢 Alert broadcasted to all users!', 'success');
+        } else {
+            toast(res.message || 'Failed to broadcast', 'error');
+        }
+    } catch { toast('Network error', 'error'); }
+}
+
 
 // ═══════════════════════════════════════════════════════
 //  API — TRIPS
@@ -829,7 +893,7 @@ async function fetchUserTrips() {
 
 async function fetchAllTrips() {
     try {
-        const d = await authFetch(`${API}/trips/all`);
+        const d = await authFetch(`${API}/trip/all`);
         return d.success ? d.trips : [];
     } catch { return []; }
 }
@@ -990,46 +1054,6 @@ function showFormMsg(id, msg, type) {
     setTimeout(() => { el.style.display = 'none'; }, 4000);
 }
 
-function openCreateAlertModal() {
-    document.getElementById('caLocation').value = '';
-    document.getElementById('caDescription').value = '';
-    openModal('createAlertModal');
-}
-
-async function submitGlobalAlert() {
-    const type = document.getElementById('caType').value;
-    const sev  = document.getElementById('caSeverity').value;
-    const loc  = document.getElementById('caLocation').value.trim();
-    const desc = document.getElementById('caDescription').value.trim();
-
-    if (!loc || !desc) {
-        toast('Please fill in location and message', 'error');
-        return;
-    }
-
-    try {
-        const res = await authFetch(`${API}/disasters`, {
-            method: 'POST',
-            body: JSON.stringify({
-                alert_type: type,
-                severity: sev,
-                location: loc,
-                description: desc,
-                effective_date: new Date(),
-                created_by: currentUser.id
-            })
-        });
-
-        if (res.success) {
-            closeModal('createAlertModal');
-            toast('Global alert broadcasted successfully! 📢', 'success');
-        } else {
-            toast(res.message || 'Failed to broadcast', 'error');
-        }
-    } catch {
-        toast('Network error', 'error');
-    }
-}
 
 // ═══════════════════════════════════════════════════════
 //  UTILITY

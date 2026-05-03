@@ -317,7 +317,7 @@ function updateStatsFromNASA() {
 
 async function fetchCommunityStats() {
   try {
-    const API_BASE = 'https://skysafe01.onrender.com/api';
+    const API_BASE = 'http://localhost:5000/api';
     const [repRes, alrRes] = await Promise.all([
       fetch(`${API_BASE}/reports`),
       fetch(`${API_BASE}/disasters?active=true`)
@@ -1493,7 +1493,7 @@ async function broadcastGlobalAlert(title, message, location) {
     showToast('Broadcasting alert...', 'blue');
     
     // Push the alert via the backend
-    const res = await fetch(`https://skysafe01.onrender.com/api/notifications`, {
+    const res = await fetch(`http://localhost:5000/api/notifications`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',

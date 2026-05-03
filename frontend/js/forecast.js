@@ -1,4 +1,4 @@
-const API_BASE_URL = 'https://skysafe01.onrender.com/api';
+const API_BASE_URL = 'http://localhost:5000/api';
 let user = document.querySelector("#uname");
 let username = localStorage.getItem("uname");
 

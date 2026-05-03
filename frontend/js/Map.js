@@ -159,7 +159,7 @@ async function loadMapDisasterData() {
     
     // ADD: Fetch our own backend disasters
     try {
-      const dbRes = await fetch('https://skysafe01.onrender.com/api/disasters?active=true');
+      const dbRes = await fetch('http://localhost:5000/api/disasters?active=true');
       if (dbRes.ok) {
         const dbData = await dbRes.json();
         if (dbData.success && dbData.alerts) {
