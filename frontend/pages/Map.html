@@ -621,7 +621,7 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 // ===================== CONFIG =====================
-const API_KEY = '8e7933e7c3fc00fd5fab0849a95f2ed8'; 
+const API_KEY = '85e24fbc730d141f1608cd28e13d5c71'; 
 const OWM_BASE = 'https://api.openweathermap.org/data/2.5';
 const OWM_TILE = 'https://tile.openweathermap.org/map';
 const EONET_API = 'https://eonet.gsfc.nasa.gov/api/v3/events';
@@ -642,6 +642,16 @@ L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
 const disasterLayer = L.layerGroup().addTo(map);
 
 // OWM weather tile layer
+const scaleConfigs = {
+  wind: { bar:'linear-gradient(to right,#001a4a,#0055ff,#00c8ff,#00ff88,#ffff00,#ff6b00)', min:'0 m/s', mid:'25 m/s', max:'50+ m/s' },
+  rain: { bar:'linear-gradient(to right,#001a4a,#0044aa,#0088ff,#00ffff,#00ff44,#ffff00,#ff6600)', min:'0 mm', mid:'25 mm', max:'50+ mm' },
+  temp: { bar:'linear-gradient(to right,#0000ff,#00aaff,#00ffff,#00ff00,#ffff00,#ff6600,#ff0000)', min:'-40°C', mid:'0°C', max:'40°C' },
+  cloud: { bar:'linear-gradient(to right,#112233,#334455,#667788,#aabbcc,#ddeeff)', min:'0%', mid:'50%', max:'100%' },
+  pressure: { bar:'linear-gradient(to right,#440088,#8800ff,#ff00ff,#ff8800,#ffff00)', min:'950 hPa', mid:'1013 hPa', max:'1050 hPa' },
+  sat: { bar:'linear-gradient(to right,#000,#333,#666,#999,#fff)', min:'Dark', mid:'Mid', max:'Bright' },
+  wave: { bar:'linear-gradient(to right,#0a2a5a,#1155aa,#3388ff,#77aaff,#ddeeff)', min:'0m', mid:'3m', max:'6m+' },
+  default: { bar:'linear-gradient(to right,#00c8ff,#0055ff,#8800ff,#ff00aa,#ff6b35)', min:'Low', mid:'Mid', max:'High' }
+};
 let currentOWMLayer = null;
 const layerNames = {
   wind: 'wind',
@@ -665,9 +675,16 @@ const layerLabels = {
 };
 
 async function addOWMLayer(type) {
-  // Update badge immediately
+  // Update badge and scale immediately
   const badge = document.getElementById('layerBadge');
   if (badge) badge.textContent = layerLabels[type] || type.toUpperCase();
+
+  const cfg = scaleConfigs[type] || scaleConfigs.default;
+  const sBar = document.getElementById('scaleBar');
+  if (sBar) sBar.style.background = cfg.bar;
+  document.getElementById('scaleMin').textContent = cfg.min;
+  document.getElementById('scaleMid').textContent = cfg.mid;
+  document.getElementById('scaleMax').textContent = cfg.max;
 
   if (currentOWMLayer) map.removeLayer(currentOWMLayer);
 
@@ -727,15 +744,16 @@ async function addOWMLayer(type) {
     currentOWMLayer = L.tileLayer(
       `${OWM_TILE}/${owmType}/{z}/{x}/{y}.png?appid=${API_KEY}`,
       { opacity: 0.6, maxZoom: 19 }
-    ).addTo(map);
-  }
+    );
+    
+    currentOWMLayer.on('tileerror', function() {
+      console.warn(`Tile load error for ${type}. Switching to fallback.`);
+      map.removeLayer(this);
+      // Final fallback to just dark map if OWM fails
+    });
 
-  // Update scale bar
-  const cfg = scaleConfigs[type] || scaleConfigs.default;
-  document.getElementById('scaleBar').style.background = cfg.bar;
-  document.getElementById('scaleMin').textContent = cfg.min;
-  document.getElementById('scaleMid').textContent = cfg.mid;
-  document.getElementById('scaleMax').textContent = cfg.max;
+    currentOWMLayer.addTo(map);
+  }
 }
 
 addOWMLayer('wind');

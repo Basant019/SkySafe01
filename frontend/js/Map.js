@@ -71,7 +71,7 @@ function initMap() {
   }).addTo(map);
 
   // ── WEATHER LAYERS (OpenWeatherMap) ──
-  const OWM_KEY = '8e7933e7c3fc00fd5fab0849a95f2ed8';
+  const OWM_KEY = '85e24fbc730d141f1608cd28e13d5c71';
   const weatherLayers = {
     "🌡️ Heat Map": L.tileLayer(`https://tile.openweathermap.org/map/temp_new/{z}/{x}/{y}.png?appid=${OWM_KEY}`, { opacity: 0.4 }),
     "💨 Wind Speed": L.tileLayer(`https://tile.openweathermap.org/map/wind_new/{z}/{x}/{y}.png?appid=${OWM_KEY}`, { opacity: 0.4 }),

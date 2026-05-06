@@ -2,7 +2,7 @@
 // All data is real. No dummy data. India-only disaster filtering.
 
 // ── CONFIG ──
-const OWM_API_KEY = '8e7933e7c3fc00fd5fab0849a95f2ed8'; // Free OpenWeatherMap key
+const OWM_API_KEY = '85e24fbc730d141f1608cd28e13d5c71'; // Working OpenWeatherMap key
 const EONET_BASE  = 'https://eonet.gsfc.nasa.gov/api/v3';
 const OWM_BASE    = 'https://api.openweathermap.org/data/2.5';
 
