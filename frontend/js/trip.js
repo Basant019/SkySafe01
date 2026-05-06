@@ -211,12 +211,23 @@ async function planTrip() {
   errorBanner.classList.remove("visible");
   results.classList.remove("visible");
 
+  // The 'btn' variable is already defined earlier in this function
+  // We keep it disabled for 5 seconds to prevent spamming and 429 errors
+  setTimeout(() => { 
+    btn.disabled = false;
+    btnText.textContent = "✈️ Plan My Trip";
+  }, 5000);
+
   try {
     const response = await fetch(`${API_BASE_URL}/trip/plan`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
+
+    if (response.status === 429) {
+      throw new Error('Too many requests. Please wait a few seconds before trying again.');
+    }
 
     const data = await response.json();
 
@@ -253,8 +264,8 @@ async function planTrip() {
   } catch (err) {
     showError(err.message);
   } finally {
-    btn.disabled = false;
-    btnText.textContent = "✈️ Plan My Trip";
+    // btn.disabled is handled by the 5-second timeout at the start of generateTrip
+    // btnText is also handled there
     spinner.style.display = "none";
   }
 }

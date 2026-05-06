@@ -62,19 +62,20 @@ async function getNearbyPlaces(lat, lon, interests, weatherCategory) {
 
   if (places.length === 0) return [];
 
-  // Fetch details for up to 25 places
-  const detailed = await Promise.allSettled(
-    places.slice(0, 25).map((p) => getPlaceDetails(p.xid, apiKey))
-  );
+  // Fetch details for up to 12 places sequentially (reduced from 25 to avoid 429)
+  const detailed = [];
+  for (const p of places.slice(0, 12)) {
+    // 150ms delay between detail requests
+    await new Promise((resolve) => setTimeout(resolve, 150));
+    const res = await getPlaceDetails(p.xid, apiKey);
+    if (res) detailed.push(res);
+  }
 
-  return detailed
-    .filter((r) => r.status === "fulfilled" && r.value !== null)
-    .map((r) => r.value)
-    .filter((p) => {
-      // Remove non-tourist spots
-      const k = (p.kinds || "").toLowerCase();
-      return !BAD_KINDS.some((bad) => k.includes(bad));
-    });
+  return detailed.filter((p) => {
+    // Remove non-tourist spots
+    const k = (p.kinds || "").toLowerCase();
+    return !BAD_KINDS.some((bad) => k.includes(bad));
+  });
 }
 
 /** Helper: fetch a list of places with given params */
@@ -148,19 +149,20 @@ async function getAmenities(lat, lon) {
   if (!apiKey) return { hotels: [], restaurants: [], transport: [] };
 
   const [hotelsRes, restaurantsRes, transportRes] = await Promise.all([
-    fetchPlaces(lat, lon, "accommodations", apiKey, 2, 15000, 5),
-    fetchPlaces(lat, lon, "foods", apiKey, 2, 15000, 5),
-    fetchPlaces(lat, lon, "transport", apiKey, 1, 25000, 5)
+    fetchPlaces(lat, lon, "accommodations", apiKey, 2, 15000, 4),
+    fetchPlaces(lat, lon, "foods", apiKey, 2, 15000, 4),
+    fetchPlaces(lat, lon, "transport", apiKey, 1, 25000, 4)
   ]);
 
   const processAmenities = async (places) => {
     if (!places || places.length === 0) return [];
-    const detailed = await Promise.allSettled(
-      places.map((p) => getAmenityDetails(p.xid, apiKey))
-    );
-    return detailed
-      .filter((r) => r.status === "fulfilled" && r.value !== null)
-      .map((r) => r.value);
+    const detailed = [];
+    for (const p of places) {
+      await new Promise((resolve) => setTimeout(resolve, 150));
+      const res = await getAmenityDetails(p.xid, apiKey);
+      if (res) detailed.push(res);
+    }
+    return detailed;
   };
 
   const [hotels, restaurants, transport] = await Promise.all([

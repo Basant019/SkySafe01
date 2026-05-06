@@ -7,7 +7,7 @@
   <title>SkySafe — Live Weather Map</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;500;600&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5/css/all.min.css"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
   <link rel="stylesheet" href="/css/responsive.css"/>
   <style>
     :root {
@@ -644,92 +644,90 @@ const disasterLayer = L.layerGroup().addTo(map);
 // OWM weather tile layer
 let currentOWMLayer = null;
 const layerNames = {
-  wind: 'wind_new',
-  rain: 'precipitation_new',
-  temp: 'temp_new',
-  cloud: 'clouds_new',
-  wave: 'wind_new',
-  radar: 'precipitation_new',
-  sat: 'clouds_new',
-  thunder: 'precipitation_new',
-  pressure: 'pressure_new',
-  hurricane: 'wind_new',
-  cold: 'precipitation_new',
-  heat: 'temp_new'
+  wind: 'wind',
+  rain: 'precipitation',
+  temp: 'temp',
+  cloud: 'clouds',
+  wave: 'pressure',         
+  radar: 'precipitation', 
+  sat: 'clouds',        
+  thunder: 'precipitation', 
+  pressure: 'pressure',
+  hurricane: 'wind',    
+  cold: 'precipitation', 
+  heat: 'temp'          
 };
 const layerLabels = {
-  wind:'WIND', rain:'RAIN & THUNDER', temp:'TEMPERATURE',
-  cloud:'CLOUDS', wave:'WAVES', radar:'RADAR',
+  wind:'WIND', rain:'RAIN', temp:'TEMPERATURE',
+  cloud:'CLOUDS', wave:'PRESSURE / WAVES', radar:'RADAR',
   sat:'SATELLITE', thunder:'THUNDERSTORMS', pressure:'PRESSURE', 
-  hurricane:'HURRICANE TRACKER', cold:'SNOW & COLD', heat:'EXTREME HEAT'
-};
-const scaleConfigs = {
-  wind: { bar:'linear-gradient(to right,#001a4a,#0055ff,#00c8ff,#00ff88,#ffff00,#ff6b00)', min:'0 m/s', mid:'25 m/s', max:'50+ m/s' },
-  rain: { bar:'linear-gradient(to right,#001a4a,#0044aa,#0088ff,#00ffff,#00ff44,#ffff00,#ff6600)', min:'0 mm', mid:'25 mm', max:'50+ mm' },
-  temp: { bar:'linear-gradient(to right,#0000ff,#00aaff,#00ffff,#00ff00,#ffff00,#ff6600,#ff0000)', min:'-40°C', mid:'0°C', max:'40°C' },
-  cloud: { bar:'linear-gradient(to right,#112233,#334455,#667788,#aabbcc,#ddeeff)', min:'0%', mid:'50%', max:'100%' },
-  pressure: { bar:'linear-gradient(to right,#440088,#8800ff,#ff00ff,#ff8800,#ffff00)', min:'950 hPa', mid:'1013 hPa', max:'1050 hPa' },
-  default: { bar:'linear-gradient(to right,#00c8ff,#0055ff,#8800ff,#ff00aa,#ff6b35)', min:'Low', mid:'Mid', max:'High' }
+  hurricane:'CYCLONE TRACKER', cold:'COLD MAP', heat:'HEAT MAP'
 };
 
 async function addOWMLayer(type) {
+  // Update badge immediately
+  const badge = document.getElementById('layerBadge');
+  if (badge) badge.textContent = layerLabels[type] || type.toUpperCase();
+
   if (currentOWMLayer) map.removeLayer(currentOWMLayer);
 
-  const isWind = ['wind', 'hurricane'].includes(type);
+  const isWind = ['wind', 'hurricane', 'wave'].includes(type);
   const isCloudSat = ['cloud', 'sat'].includes(type);
-  const isRadar = ['rain', 'radar', 'thunder'].includes(type);
+  const isRadar = ['radar'].includes(type);
+  const isRain = ['rain', 'thunder'].includes(type);
 
-  // Handle Wind Layer using built-in canvas particles
+  // Handle Wind/Wave particles
   if (isWind) {
     if (!particlesActive) {
       const pToggle = document.getElementById('particleToggle');
       if (pToggle) toggleParticles(pToggle);
     }
-    document.getElementById('layerBadge').textContent = layerLabels[type] || type.toUpperCase();
+    
+    // Fallback static layer for wind/wave
+    const owmType = layerNames[type] || 'wind';
+    currentOWMLayer = L.tileLayer(
+      `${OWM_TILE}/${owmType}/{z}/{x}/{y}.png?appid=${API_KEY}`,
+      { opacity: 0.3, maxZoom: 19 }
+    ).addTo(map);
     return;
   } else {
-    // Turn off wind particles if another layer is selected
     if (particlesActive) {
       const pToggle = document.getElementById('particleToggle');
       if (pToggle) toggleParticles(pToggle);
     }
   }
 
-  if (isRadar) {
+  if (isRadar || isRain) {
     try {
       const rvRes = await fetch('https://api.rainviewer.com/public/weather-maps.json');
       const rvData = await rvRes.json();
       const lastRadar = rvData.radar.past[rvData.radar.past.length - 1];
       let path = lastRadar.path;
       
-      // 2 = Color Radar
+      const colorScheme = isRadar ? 2 : 1; 
       currentOWMLayer = L.tileLayer(
-        `https://tilecache.rainviewer.com${path}/256/{z}/{x}/{y}/2/1_1.png`,
+        `https://tilecache.rainviewer.com${path}/256/{z}/{x}/{y}/${colorScheme}/1_1.png`,
         { opacity: 0.8, maxZoom: 19 }
-      );
-      currentOWMLayer.addTo(map);
+      ).addTo(map);
     } catch (e) {
       console.warn("RainViewer Load Fail", e);
+      const owmType = isRadar ? 'precipitation' : 'clouds';
+      currentOWMLayer = L.tileLayer(`${OWM_TILE}/${owmType}/{z}/{x}/{y}.png?appid=${API_KEY}`, { opacity: 0.6 }).addTo(map);
     }
   } else if (isCloudSat) {
-    // Use Iowa Environmental Mesonet (IEM) Global GOES Infrared for clouds/satellite
     currentOWMLayer = L.tileLayer.wms("https://mesonet.agron.iastate.edu/cgi-bin/wms/goes/global.cgi?", {
-        layers: 'goes_global_ir',
+        layers: type === 'sat' ? 'goes_global_ir' : 'goes_global_vis',
         format: 'image/png',
         transparent: true,
-        opacity: 0.65,
-        attribution: "Weather data © IEM"
-    });
-    currentOWMLayer.addTo(map);
+        opacity: type === 'sat' ? 0.7 : 0.5,
+        attribution: "© IEM"
+    }).addTo(map);
   } else {
-    // For temp, pressure, wave, heat, cold -> Show fallback alert since OWM Free tier blocks this
-    console.warn(`Layer ${layerLabels[type]} requires premium map subscription.`);
-    const owmType = layerNames[type] || 'temp_new';
+    const owmType = layerNames[type] || 'temp';
     currentOWMLayer = L.tileLayer(
       `${OWM_TILE}/${owmType}/{z}/{x}/{y}.png?appid=${API_KEY}`,
-      { opacity: 0.75, maxZoom: 19 }
-    );
-    currentOWMLayer.addTo(map);
+      { opacity: 0.6, maxZoom: 19 }
+    ).addTo(map);
   }
 
   // Update scale bar
@@ -738,9 +736,6 @@ async function addOWMLayer(type) {
   document.getElementById('scaleMin').textContent = cfg.min;
   document.getElementById('scaleMid').textContent = cfg.mid;
   document.getElementById('scaleMax').textContent = cfg.max;
-
-  // Update badge
-  document.getElementById('layerBadge').textContent = layerLabels[type] || type.toUpperCase();
 }
 
 addOWMLayer('wind');
