@@ -319,6 +319,9 @@
     }
 
     /* Loading overlay */
+    .heat-layer { filter: saturate(2) contrast(1.2) hue-rotate(-10deg); }
+    .cold-layer { filter: saturate(1.5) contrast(1.1) hue-rotate(180deg) brightness(1.2); }
+    
     .loading-overlay {
       position:fixed; inset:0; z-index:9999;
       background:var(--sky-dark);
@@ -502,6 +505,12 @@
 
 <!-- MAP CONTROLS -->
 <div class="map-controls">
+    <div class="sidebar-nav">
+      <button class="nav-icon-btn active" title="Layers" onclick="showPanel('layers', this)"><i class="fas fa-layer-group"></i></button>
+      <button class="nav-icon-btn" title="Warnings" onclick="showPanel('warnings', this)"><i class="fas fa-exclamation-triangle"></i></button>
+      <button class="nav-icon-btn" title="Stats" onclick="showPanel('stats', this)"><i class="fas fa-chart-bar"></i></button>
+      <button class="nav-icon-btn" title="Settings" onclick="showPanel('settings', this)"><i class="fas fa-cog"></i></button>
+    </div>
   <div class="map-ctrl-group">
     <button class="map-ctrl-btn" onclick="zoomIn()" title="Zoom In"><i class="fas fa-plus"></i></button>
     <button class="map-ctrl-btn" onclick="zoomOut()" title="Zoom Out"><i class="fas fa-minus"></i></button>
@@ -721,7 +730,12 @@ async function addOWMLayer(type) {
       const lastRadar = rvData.radar.past[rvData.radar.past.length - 1];
       let path = lastRadar.path;
       
-      const colorScheme = isRadar ? 2 : 1; 
+      // Distinct schemes for Radar, Rain, Thunder
+      let colorScheme = 2; // Radar
+      if (type === 'rain') colorScheme = 1; 
+      if (type === 'thunder') colorScheme = 3;
+      if (type === 'cold') colorScheme = 4;
+
       currentOWMLayer = L.tileLayer(
         `https://tilecache.rainviewer.com${path}/256/{z}/{x}/{y}/${colorScheme}/1_1.png`,
         { opacity: 0.8, maxZoom: 19 }
@@ -732,6 +746,7 @@ async function addOWMLayer(type) {
       currentOWMLayer = L.tileLayer(`${OWM_TILE}/${owmType}/{z}/{x}/{y}.png?appid=${API_KEY}`, { opacity: 0.6 }).addTo(map);
     }
   } else if (isCloudSat) {
+    // IEM GOES layers are distinct
     currentOWMLayer = L.tileLayer.wms("https://mesonet.agron.iastate.edu/cgi-bin/wms/goes/global.cgi?", {
         layers: type === 'sat' ? 'goes_global_ir' : 'goes_global_vis',
         format: 'image/png',
@@ -743,15 +758,13 @@ async function addOWMLayer(type) {
     const owmType = layerNames[type] || 'temp';
     currentOWMLayer = L.tileLayer(
       `${OWM_TILE}/${owmType}/{z}/{x}/{y}.png?appid=${API_KEY}`,
-      { opacity: 0.6, maxZoom: 19 }
+      { 
+        opacity: 0.6, 
+        maxZoom: 19,
+        className: type === 'heat' ? 'heat-layer' : (type === 'cold' ? 'cold-layer' : '')
+      }
     );
     
-    currentOWMLayer.on('tileerror', function() {
-      console.warn(`Tile load error for ${type}. Switching to fallback.`);
-      map.removeLayer(this);
-      // Final fallback to just dark map if OWM fails
-    });
-
     currentOWMLayer.addTo(map);
   }
 }
@@ -768,9 +781,16 @@ async function loadDisasters() {
     data.events.forEach(ev => {
       const cat = ev.categories[0].title;
       const geom = ev.geometry[0];
-      if (geom.type !== 'Point') return;
       
-      const coords = [geom.coordinates[1], geom.coordinates[0]];
+      let coords;
+      if (geom.type === 'Point') {
+        coords = [geom.coordinates[1], geom.coordinates[0]];
+      } else if (geom.type === 'Polygon' || geom.type === 'LineString') {
+        // Use the first coordinate as a fallback for the marker
+        const first = geom.type === 'Polygon' ? geom.coordinates[0][0] : geom.coordinates[0];
+        coords = [first[1], first[0]];
+      } else return;
+      
       const sev = determineSeverity(ev.title);
       
       const marker = L.divIcon({
